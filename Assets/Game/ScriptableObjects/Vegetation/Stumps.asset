@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e1e99aa2316e45538ae2ac76bbd71a6, type: 3}
+  m_Name: Stumps
+  m_EditorClassIdentifier: SpaceGame.Vegetation::SpaceGame.Vegetation.VegetationLayerAsset
+  mode: 0
+  clearingRadius: 0
+  count: 25
+  minDistance: 10
+  patchSize: 0
+  coverage: 0
+  spacing: 0
+  positionJitter: 0.4
+  noiseOctaves: 3
+  noisePersistence: 0.45
+  items:
+  - prefab: {fileID: 3987557199636002391, guid: d8dd29a338da547e4b437f04b32ebece, type: 3}
+    weight: 1
+    scale:
+      Min: 0.8
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 4
+    sink:
+      Min: 0
+      Max: 0.03

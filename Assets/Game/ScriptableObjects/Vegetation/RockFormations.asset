@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e1e99aa2316e45538ae2ac76bbd71a6, type: 3}
+  m_Name: RockFormations
+  m_EditorClassIdentifier: SpaceGame.Vegetation::SpaceGame.Vegetation.VegetationLayerAsset
+  mode: 0
+  clearingRadius: 0
+  count: 40
+  minDistance: 12
+  patchSize: 0
+  coverage: 0
+  spacing: 0
+  positionJitter: 0.4
+  noiseOctaves: 3
+  noisePersistence: 0.45
+  items:
+  - prefab: {fileID: 8522249003941782317, guid: 40af2026e73924d69aac90055330ce1b, type: 3}
+    weight: 1
+    scale:
+      Min: 0.8
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 4
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 1111672237071839405, guid: acb6f498533564a1989078b2cedea7ba, type: 3}
+    weight: 1
+    scale:
+      Min: 0.8
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 4
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 6968706498781224556, guid: b8495fad4f95e43808aa8cd279211f95, type: 3}
+    weight: 1
+    scale:
+      Min: 0.8
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 4
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 2681944564462142345, guid: ba370154be2a945a19229d4636717b36, type: 3}
+    weight: 1
+    scale:
+      Min: 0.8
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 4
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 8828921962527011182, guid: 7cd2462528ec44b7b8eec4b4039bbb98, type: 3}
+    weight: 1
+    scale:
+      Min: 0.8
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 4
+    sink:
+      Min: 0
+      Max: 0.03

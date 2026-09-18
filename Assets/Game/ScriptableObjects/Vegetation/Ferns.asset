@@ -1,0 +1,151 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e1e99aa2316e45538ae2ac76bbd71a6, type: 3}
+  m_Name: Ferns
+  m_EditorClassIdentifier: SpaceGame.Vegetation::SpaceGame.Vegetation.VegetationLayerAsset
+  mode: 1
+  clearingRadius: 0
+  count: 0
+  minDistance: 0
+  patchSize: 14
+  coverage: 0.25
+  spacing: 6
+  positionJitter: 0.4
+  noiseOctaves: 3
+  noisePersistence: 0.45
+  items:
+  - prefab: {fileID: 3312003519726949003, guid: 86832ddfe6cd34e658876eb2cbf62c13, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 3043694406294103323, guid: 400319ae17fde4fa9a6333eb0261d607, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 4738238533821281874, guid: cfdb6b40dfef6491cbc586880538648d, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 9060338617979487468, guid: 7388abc1e174540df85e4b3d4b8f2faa, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 61707044310783655, guid: 7281fade54bea4781a76b161e4e92b7e, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 8647091628388783743, guid: 95dc49a51248743979899549c8d835c8, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 3032305037645339682, guid: 4327ad45e0ab04f0f8c7826e7ec8b3e0, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 3019595198351417983, guid: d64548fba35f74895a4d3c9334d63140, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 6430928736471855469, guid: 5b4afa2a144664e8d9d49a3c6b6be156, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
