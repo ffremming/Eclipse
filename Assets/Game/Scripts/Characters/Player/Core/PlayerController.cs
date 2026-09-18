@@ -14,8 +14,7 @@ namespace SpaceGame.Characters
         public IPlayerInventory PlayerInventory {get; private set; }
     
         [SerializeField] private GameObject playerCamera;
-        [SerializeField] private GameObject playerHUD;
-    
+
         [SerializeField] private PlayerMovement playerMovement;
         [SerializeField] private PlayerLook playerLook;
         [SerializeField] private DamageFeedback damageFeedback;
@@ -56,7 +55,6 @@ namespace SpaceGame.Characters
         public void EnablePlayer()
         {
             playerCamera.gameObject.SetActive(true);
-            playerHUD.gameObject.SetActive(true);
             damageFeedback.enabled = true;
 
             // Subscribe exactly once. Awake calls DisablePlayer then EnablePlayer, and the network
@@ -95,7 +93,6 @@ namespace SpaceGame.Characters
         {
             Input.enabled = false;
             playerCamera.gameObject.SetActive(false);
-            playerHUD.gameObject.SetActive(false);
             playerMovement.enabled = false;
             playerLook.enabled = false;
             damageFeedback.enabled = false;
@@ -116,34 +113,14 @@ namespace SpaceGame.Characters
         private bool savedMovementEnabled;
         private bool savedLookEnabled;
         private bool savedDamageFeedbackEnabled;
-        private bool savedHudActive;
 
         public bool InCutsceneMode => inCutsceneMode;
 
         /// <summary>
-        /// The whole HUD instance — crosshair, helmet, health, death screen and the hotbar.
-        ///
-        /// Exposed so a screen that takes control with <c>hideHud: false</c> can reach in and hide
-        /// the one part of it that would be wrong. Backpack focus mode is the case that needed it:
-        /// items are dragged onto the hotbar, so the hotbar has to stay, but there is nothing to
-        /// aim at and a crosshair over a cursor reads as two cursors.
+        /// Hand the body over to something else — a menu, a cutscene — while the camera keeps
+        /// rendering, so gameplay stays visible behind whatever took control.
         /// </summary>
-        public GameObject HudRoot => playerHUD;
-
-        public void EnterCutsceneMode() => EnterCutsceneMode(hideHud: true);
-
-        /// <summary>
-        /// As <see cref="EnterCutsceneMode()"/>, but <paramref name="hideHud"/> false leaves the
-        /// HUD on screen.
-        ///
-        /// <para>
-        /// A separate overload rather than a changed signature because the no-argument form is
-        /// what <c>CutsceneDirector</c>, <c>MatchResultUI</c> and <c>GameplayMenuScope</c> all
-        /// call, and hiding the HUD is right for every one of them. Only a screen the player is
-        /// meant to use *with* their gear visible wants the other behaviour.
-        /// </para>
-        /// </summary>
-        public void EnterCutsceneMode(bool hideHud)
+        public void EnterCutsceneMode()
         {
             if (inCutsceneMode) return;
             inCutsceneMode = true;
@@ -152,17 +129,11 @@ namespace SpaceGame.Characters
             savedMovementEnabled = playerMovement.enabled;
             savedLookEnabled = playerLook.enabled;
             savedDamageFeedbackEnabled = damageFeedback.enabled;
-            savedHudActive = playerHUD.activeSelf;
 
             Input.enabled = false;
             playerMovement.enabled = false;
             playerLook.enabled = false;
             damageFeedback.enabled = false;
-
-            // Left alone rather than re-asserted when hideHud is false: ExitCutsceneMode restores
-            // savedHudActive either way, so a HUD that was already off stays off and one that was
-            // on is handed back exactly as it was found.
-            if (hideHud) playerHUD.SetActive(false);
         }
 
         public void ExitCutsceneMode()
@@ -171,7 +142,6 @@ namespace SpaceGame.Characters
             inCutsceneMode = false;
 
             damageFeedback.enabled = savedDamageFeedbackEnabled;
-            playerHUD.SetActive(savedHudActive);
 
             // Dying during a cutscene captures a pre-death snapshot that says movement and look
             // were enabled. Restoring it verbatim is what hands a corpse its controls back and
@@ -194,10 +164,6 @@ namespace SpaceGame.Characters
 
             ApplyDeathFreeze();
             OnPlayerDeath?.Invoke();
-
-            // The body going limp is PlayerRagdoll's, and it is deliberately not called from here.
-            // Going limp is not this method's job: PlayerRagdoll subscribes to the HealthComponent
-            // directly, so a body goes down off the death itself rather than off the freeze.
         }
 
         // Input.enabled is part of the freeze, not an extra: jump and dash are delivered as input

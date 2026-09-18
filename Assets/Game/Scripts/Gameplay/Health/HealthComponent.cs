@@ -44,7 +44,7 @@ namespace SpaceGame.Gameplay
         /// tell "this just died" from "this was already dead when the world loaded".
         ///
         /// It has to be askable, because <see cref="OnDeath"/> fires in both cases and the
-        /// consequences of death are not repeatable: <c>HealthReactionModule</c> plays the death
+        /// consequences of death are not repeatable: a death handler plays the death
         /// sound and starts a despawn timer, and <c>EntityLootTable</c> drops the loot table. Without
         /// this flag, killing one creature and reloading five times dropped five sets of loot.
         /// </summary>

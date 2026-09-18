@@ -21,8 +21,8 @@
     ]
   },
   "enabledPlugins": {
-    "spacegame-artifact@ferdinand-skills": true,
-    "spacegame-agent@ferdinand-skills": true,
-    "spacegame-persistence@ferdinand-skills": true
+    "spacegame-artifact@ferdinand-skills": false,
+    "spacegame-agent@ferdinand-skills": false,
+    "spacegame-persistence@ferdinand-skills": false
   }
 }

@@ -16,11 +16,16 @@ namespace SpaceGame.Gameplay
         [SerializeField] private float spawnRadius = 10f;
         [SerializeField] private LayerMask blockingLayers;
 
-        [Tooltip("Lift above the sampled ground point. The player capsule's bottom sits ~1m below " +
-                 "the prefab pivot, so spawning exactly on the surface buries half the collider and " +
-                 "PhysX sometimes resolves that penetration downwards, dropping the body through " +
-                 "the floor.")]
-        [SerializeField] private float groundClearance = 1.2f;
+        [Tooltip("Lift above the sampled ground point. A skin, not a drop: a body's pivot is the " +
+                 "underside of its own capsule, so one set down on the surface is already standing " +
+                 "on it. This only keeps the first physics step from beginning in contact.")]
+        [SerializeField] private float groundClearance = 0.05f;
+
+        /// <summary>
+        /// The lift this point puts over the ground it finds. Public so a caller — or a test —
+        /// can say "one clearance above the floor" without repeating the number.
+        /// </summary>
+        public float GroundClearance => groundClearance;
 
         [Tooltip("How many scattered positions to try before falling back to this point's own X/Z.")]
         [SerializeField] private int attempts = 20;

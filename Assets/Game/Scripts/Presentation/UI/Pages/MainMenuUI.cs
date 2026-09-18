@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using SpaceGame.Core;
-using SpaceGame.Presentation;
 
 public class MainMenuUI : MonoBehaviour
 {
@@ -26,7 +25,21 @@ public class MainMenuUI : MonoBehaviour
     public void StartGame() => EnterWorld();
 
     /// <summary>
-    /// Loads the game scene, behind a loading screen that stays up until it is genuinely playable.
+    /// Front-menu entry: leave the game. Bound by name from MainMenu.unity; do not rename.
+    /// </summary>
+    public void QuitGame()
+    {
+        GameSettings.Save();
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
+    /// <summary>
+    /// Loads the game scene.
     /// </summary>
     public void EnterWorld()
     {
@@ -36,13 +49,6 @@ public class MainMenuUI : MonoBehaviour
             return;
         }
 
-        LoadingScreenUI.ShowUntilReady(gameScene.SceneName);
-
         SceneManager.LoadScene(gameScene.SceneName, LoadSceneMode.Single);
-    }
-
-    public void QuitGame()
-    {
-        Application.Quit();
     }
 }

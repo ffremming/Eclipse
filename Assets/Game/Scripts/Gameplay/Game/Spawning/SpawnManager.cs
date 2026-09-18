@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using SpaceGame.Agents;
 
 namespace SpaceGame.Gameplay
 {
@@ -16,12 +15,6 @@ namespace SpaceGame.Gameplay
 
         [Tooltip("The body the player gets.")]
         [SerializeField] private GameObject playerPrefab;
-
-        [Header("Targeting")]
-        [Tooltip("Faction assigned to every spawned player so AI can see them. Without this the " +
-                 "player is absent from EntityTargetRegistry and no enemy will ever target them.")]
-        [SerializeField] private FactionDefinition playerFaction;
-        [SerializeField] private FactionRelationshipTable relationshipTable;
 
         private void Awake()
         {
@@ -191,13 +184,9 @@ namespace SpaceGame.Gameplay
                 return null;
             }
 
-            GameObject playerObj = Instantiate(playerPrefab, spawnPosition, spawnRotation);
-
-            // So the entity is registered for targeting from its first frame. Without a faction the
-            // player is invisible to every enemy in the arena.
-            EntityFaction.Ensure(playerObj, playerFaction, relationshipTable);
-
-            return playerObj;
+            // No faction registration: enemies find the player by the "Player" tag on the prefab,
+            // so a spawned player is targetable from its first frame with nothing to wire up.
+            return Instantiate(playerPrefab, spawnPosition, spawnRotation);
         }
     }
 }

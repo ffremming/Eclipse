@@ -99,7 +99,7 @@ namespace SpaceGame.Gameplay
         /// <c>transform.root</c> would answer with the vehicle instead.
         ///
         /// The tag, not a component: <c>PlayerController</c> would work for players, but the
-        /// obvious way to extend this to NPCs — matching <c>AgentController</c> — would also match
+        /// obvious way to extend this to NPCs — matching <c>EnemyAgent</c> — would also match
         /// ShipRV, whose hull and cargo bay floor are exactly the geometry this test exists to
         /// catch. Nothing but PlayerCharacter carries this tag, and the project defines no custom
         /// tags at all, so it cannot widen by accident.

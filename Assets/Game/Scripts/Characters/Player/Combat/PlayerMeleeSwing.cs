@@ -5,9 +5,11 @@
 // nothing equipped the button has nothing else to do. An equipped item still wins: the hotbar item
 // is what the player deliberately put in their hand.
 //
-// Presentation only for now. It plays the swing; nothing takes damage. The hit window, the hitbox
-// and the damage call are a separate piece of work, and this is the seam they will hang off.
+// This decides WHEN the player swings. What a swing connects with belongs to MeleeStrike, which the
+// enemies drive from their own brains off the very same component — so the player and the goblins
+// fighting them resolve a hit through one piece of code rather than two that drift apart.
 using SpaceGame.Core;
+using SpaceGame.Enemies;
 using SpaceGame.Gameplay;
 using SpaceGame.Items;
 using UnityEngine;
@@ -23,6 +25,10 @@ namespace SpaceGame.Characters
         [SerializeField] private Animator animator;
         [SerializeField] private EquipmentController equipment;
         [SerializeField] private HealthComponent health;
+
+        [Tooltip("What the swing hits. Leave empty and the player swings for show, as it did before " +
+                 "there was a hitbox — which is worth knowing if melee suddenly stops hurting.")]
+        [SerializeField] private MeleeStrike strike;
 
         [Tooltip("How many swing clips the Attack layer cycles through. Must match the number of " +
                  "swing states in the controller, which the AttackIndex parameter selects between.")]
@@ -42,6 +48,7 @@ namespace SpaceGame.Characters
             if (animator == null) animator = GetComponent<Animator>();
             if (equipment == null) equipment = GetComponent<EquipmentController>();
             if (health == null) health = GetComponent<HealthComponent>();
+            if (strike == null) strike = GetComponent<MeleeStrike>();
 
             sequence = new MeleeSwingSequence(swingVariations, swingCooldown);
         }
@@ -68,6 +75,10 @@ namespace SpaceGame.Characters
 
             animator.SetInteger(AttackIndex, index);
             animator.SetTrigger(AttackTrigger);
+
+            // After the animator, so that a swing always looks like it happened even if the hitbox
+            // is missing from the prefab.
+            if (strike != null) strike.Swing();
         }
     }
 }

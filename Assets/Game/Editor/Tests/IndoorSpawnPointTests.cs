@@ -90,7 +90,7 @@ namespace SpaceGame.EditorTools
 
             Assert.IsTrue(point.TryGetSpawnPoint(out Vector3 position),
                 "There is a floor under it and headroom over it. There is nothing to wait for.");
-            Assert.AreEqual(1.2f, position.y, 0.01f,
+            Assert.AreEqual(point.GroundClearance, position.y, 0.01f,
                 "The pivot sits one ground-clearance above the floor it found — not above the " +
                 "ground outside, which is where the terrain fallback would have put it.");
         }

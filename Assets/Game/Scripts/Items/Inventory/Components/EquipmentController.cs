@@ -378,7 +378,7 @@ namespace SpaceGame.Items
             usable.OnRequestUse(ref context);
 
             // Presented before it is run, so the report and the muzzle flash lead the effect rather
-            // than trail it. Same order as an NPC's EntityEquipmentController.
+            // than trail it.
             usable.PlayUse(gameObject, context);
             usable.TryUse(gameObject, context);
 

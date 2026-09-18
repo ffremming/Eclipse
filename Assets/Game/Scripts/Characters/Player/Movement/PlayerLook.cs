@@ -25,10 +25,6 @@ namespace SpaceGame.Characters
         public float sensitivity = 1f;
         public float verticalClamp = 80f;
 
-        [Tooltip("Mouse sensitivity is multiplied by this while aiming, eased over the aim blend. " +
-                 "Below 1 makes fine aim possible; 1 disables the effect.")]
-        [SerializeField, Range(0.1f, 1f)] private float aimSensitivity = 0.5f;
-
         private float pitch = 0f;
 
         /// Yaw accumulated by Update since the last physics step, in degrees. See Update.
@@ -38,12 +34,9 @@ namespace SpaceGame.Characters
 
         private Camera lookCamera;
 
-        private PlayerAimRig aimRig;
-
         private void Start()
         {
             inputs = GetComponent<PlayerController>().Input;
-            aimRig = GetComponent<PlayerAimRig>();
             playerRigidbody = playerBody.GetComponent<Rigidbody>();
 
             // Start/OnDestroy, deliberately not OnEnable/OnDisable: mounting disables this
@@ -88,9 +81,9 @@ namespace SpaceGame.Characters
         ///
         /// <para>
         /// True is the resting state and the whole reason <see cref="firstPersonHidden"/> exists.
-        /// It is lifted while the camera is not in the helmet — a ragdolled player watches their own
-        /// body from outside it (<c>PlayerRagdoll</c>), and hiding the head from the only camera
-        /// looking at it leaves them staring at a headless corpse.
+        /// It is lifted while the camera is not in the helmet — anything that pulls the camera out
+        /// to watch the player's own body from outside it, where hiding the head from the only
+        /// camera looking at it leaves them staring at a headless body.
         /// </para>
         ///
         /// <para>
@@ -268,14 +261,7 @@ namespace SpaceGame.Characters
 
             // The serialized sensitivity is the rig's own scale; the setting is a multiplier on top
             // of it, so tuning the prefab and the player's preference stay independent.
-            // Eased on the aim blend rather than switched on the button, so the sensitivity change
-            // arrives with the weapon rather than a fifth of a second before it. Never written back
-            // to GameSettings — that is the player's own preference and must survive aiming.
-            float aimScale = aimRig != null
-                ? Mathf.Lerp(1f, aimSensitivity, aimRig.AimBlend)
-                : 1f;
-
-            float scaled = sensitivity * GameSettings.MouseSensitivity * aimScale;
+            float scaled = sensitivity * GameSettings.MouseSensitivity;
 
             // Yaw is banked here and spent in FixedUpdate, because it turns a Rigidbody and a
             // Rigidbody may only be posed on the physics clock. Calling MoveRotation from here span

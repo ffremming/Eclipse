@@ -19,9 +19,8 @@ namespace SpaceGame.Items
     /// while the player walks. All of the movement gating went with it.
     /// </para>
     /// <para>
-    /// Two kinds of holder, because they have different rigs. A player has a
-    /// <see cref="PlayerAimRig"/> and gets a hold style. Anything else — an NPC, a turret — keeps
-    /// the original <c>Hold</c> bool, which is what its controller is still built around.
+    /// Every holder now takes the same path: the <c>Hold</c> bool on its own Animator, which is
+    /// what each controller is built around.
     /// </para>
     /// </summary>
     public class HoldAnimator : MonoBehaviour
@@ -30,11 +29,10 @@ namespace SpaceGame.Items
                  "tries the holder's Animator, then any Animator in this object's children.")]
         [SerializeField] private Animator animator;
 
-        [Tooltip("Bool parameter driven on holders that have no PlayerAimRig — NPCs and turrets.")]
+        [Tooltip("Bool parameter driven on the holder's Animator while an item is held.")]
         [SerializeField] private string boolParameter = "Hold";
 
         private Animator resolvedAnimator;
-        private PlayerAimRig rig;
         private bool wroteBool;
 
         private int cachedHash;
@@ -73,26 +71,12 @@ namespace SpaceGame.Items
         {
             if (value)
             {
-                rig = holder != null ? holder.GetComponent<PlayerAimRig>() : null;
-                resolvedAnimator = rig != null ? null : ResolveAnimator(holder);
-
-                if (rig != null)
-                {
-                    var grip = GetComponent<ItemGrip>();
-                    rig.SetHeldStyle(grip != null ? grip.Style : ItemGrip.HoldStyle.OneHanded);
-                }
-                else
-                {
-                    WriteBool(true);
-                }
-
+                resolvedAnimator = ResolveAnimator(holder);
+                WriteBool(true);
                 return;
             }
 
-            if (rig != null) rig.SetHeldStyle(ItemGrip.HoldStyle.None);
-            else WriteBool(false);
-
-            rig = null;
+            WriteBool(false);
             resolvedAnimator = null;
         }
 

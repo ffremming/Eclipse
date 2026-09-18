@@ -90,8 +90,11 @@ namespace SpaceGame.EditorTools
             return host.AddComponent<SpawnManager>();
         }
 
-        /// <summary>Where a body standing on the bay floor would be, for use as an occupant.</summary>
-        private static Vector3 StandingAt(float x, float z) => new(x, 1.2f, z);
+        /// <summary>
+        /// Where a body standing on the bay floor would be, for use as an occupant. A body's
+        /// pivot is the underside of its own capsule, so that is the floor itself.
+        /// </summary>
+        private static Vector3 StandingAt(float x, float z) => new(x, 0f, z);
 
         // ── The spawn point on its own ────────────────────────────────────────────
 
@@ -101,7 +104,8 @@ namespace SpaceGame.EditorTools
             SpawnPoint point = BuildBay(floorSize: 30f, scatterRadius: 10f);
 
             Assert.IsTrue(point.TryGetSpawnPoint(null, 0f, out Vector3 position, out float clearance));
-            Assert.AreEqual(1.2f, position.y, 0.01f, "One ground clearance above the floor it found.");
+            Assert.AreEqual(point.GroundClearance, position.y, 0.01f,
+                "One ground clearance above the floor it found.");
             Assert.IsTrue(float.IsPositiveInfinity(clearance),
                 "An empty room is as clear as it is possible to be, so every separation test passes " +
                 "without the caller needing a special case for the first player in.");
@@ -138,7 +142,8 @@ namespace SpaceGame.EditorTools
                 "spawn timeout and be dropped on somebody's head anyway.");
 
             Assert.Less(clearance, 8f, "It should report honestly that it could not get clear.");
-            Assert.AreEqual(1.2f, position.y, 0.01f, "And it is still a position on the floor.");
+            Assert.AreEqual(point.GroundClearance, position.y, 0.01f,
+                "And it is still a position on the floor.");
         }
 
         [Test]

@@ -1,24 +1,22 @@
 # Eclipse
 
 Unity 6 project (6000.3): a **single-player fighting game**. Carved out of the AIR codebase on
-2026-09-18, which was itself carved out of SpaceGame. What was kept is the framework — the player
-character and camera, health and damage, ragdolls, weapons and projectiles, the agent/AI stack,
-inventory and hotbar, interaction, audio, the UI shell, input, spawning and scene management.
+2026-09-18, which was itself carved out of SpaceGame. What is kept is a deliberately small
+framework — the player character and camera, melee combat, health and damage, the enemy/AI stack,
+the vegetation and terrain world, inventory and items, interaction, input, spawning and scene
+management.
 
-Everything domain-specific to AIR was removed: flight (ornithopter, wingsuit, wing pack), the
-grappling hook, terrain and world streaming, the generated flying world, mounts and riding, the
-racing and minigame modes, NPC caravans and the Ostrich, the backpack, save/load, and the whole
-multiplayer stack.
+**The world is `Scenes/World/NatureWorld.unity`.** It is the game's main world, and the main menu's
+Play button loads it. The terrain, the vegetation system under `Scripts/World/` and the
+`BugWarNature` pack all exist to serve it — they are not AIR leftovers, whatever their history.
 
 **The game is single-player and has no notion of a second machine.** The last remnants of the
 netcode shape — the `Network` authority shim, the `NetMessaging` / `NetChannel` / `NetMsg` message
-bus, `AgentAuthority`, the `Cosmetic` projectile flag and the ragdoll's driver/watcher split — were
-deleted on 2026-09-18. What was routed through a message id is a direct call now: a use goes
-`OnRequestUse` → `PlayUse` → `TryUse` in `EquipmentController`, a knockdown is
-`PlayerRagdoll.Knockdown` / `AgentRagdoll.Knockdown`, a blast on the player is `FlungBody.Fling`.
-The describe/do/present split items and weapons are written in survives, because it is a gameplay
-shape rather than a netcode one: `OnRequestUse` fills in a `UseContext`, `Use()` runs the effect
-and `Present()` plays the look and sound.
+bus, `AgentAuthority` and the `Cosmetic` projectile flag — were deleted on 2026-09-18. What was
+routed through a message id is a direct call now: a use goes `OnRequestUse` → `PlayUse` → `TryUse`
+in `EquipmentController`, a blast on the player is `FlungBody.Fling`. The describe/do/present split
+items are written in survives, because it is a gameplay shape rather than a netcode one:
+`OnRequestUse` fills in a `UseContext`, `Use()` runs the effect and `Present()` plays the look.
 
 Namespaces are still `SpaceGame.*` throughout. That is inherited, not a decision — renaming them
 is a mechanical change nobody has made yet.
@@ -27,32 +25,55 @@ is a mechanical change nobody has made yet.
 
 | Area | Where | Entry points |
 | --- | --- | --- |
-| Player | `Scripts/Characters/Player/` | `PlayerController`, `Movement`, `PlayerLook`, `PlayerStance`, `PlayerView` |
-| Combat | `Scripts/Weapons/`, `Scripts/Gameplay/Health/` | `Weapon`, `Projectile`, `HealthComponent`, `Damage` |
-| Ragdolls | `Scripts/Gameplay/Ragdoll/` | `RagdollRig`, `PlayerRagdoll`, `AgentRagdoll`, `RagdollBudget` |
-| Agents / AI | `Scripts/agents/` | `AgentController`, behaviour modules, `EnemyBrain`, `NpcBrain` |
-| Locomotion | `Scripts/Locomotion/` | `LeggedLocomotion` and the walker rig/gait/IK stack |
+| Player | `Scripts/Characters/Player/` | `PlayerController`, `Movement`, `PlayerLook`, `PlayerStance` |
+| Melee combat | `Scripts/Characters/Player/Combat/`, `Scripts/Enemies/` | `PlayerMeleeSwing`, `MeleeSwingSequence`, `MeleeStrike` |
+| Health / damage | `Scripts/Gameplay/Health/` | `HealthComponent`, `Damage`, `DamageFeedback` |
+| Enemies / AI | `Scripts/Enemies/` | `EnemyAgent`, `EnemyBrain`, `EnemyBase`, `EnemyAlert` |
+| World | `Scripts/World/` | `VegetationField`, `VegetationLayout`, `WorldAtmosphere` |
 | Items | `Scripts/Items/` | `InventoryItem`, `UsableItem`, `UseContext`, `EquipmentController`, `HotbarController` |
 | Interaction | `Scripts/Gameplay/Interaction/` | `Interactor`, `IInteractable`, `InteractableTrigger` |
 | Spawning | `Scripts/Gameplay/Game/Spawning/` | `SpawnManager`, `SpawnPoint`, `SpawnClearance` |
 | Teleporting | `Scripts/Core/Motion/Teleport.cs`, `Scripts/Core/Teleporting/` | `Teleport.Move`, `ITeleportAware` |
-| UI | `Scripts/Presentation/UI/` | `MainMenuUI`, `PauseMenuUI`, `LoadingScreenUI`, HUD, `GameplayMenuScope` |
+| Menu | `Scripts/Presentation/UI/` | `MainMenuUI`, `CursorSpotlight`, `RevealField`, `GameplayMenuScope` |
 
-Scenes: `Scenes/Core/Bootstrap.unity`, `Scenes/Core/MainMenu.unity` and the fight scene
-`Scenes/Arena/Arena.unity` (inherited from AIR's minigame arena). Those three are what is in Build
-Settings.
+Scenes, and all three are what is in Build Settings: `Scenes/Core/Bootstrap.unity`,
+`Scenes/Core/MainMenu.unity` and the world, `Scenes/World/NatureWorld.unity`.
 
-## State of the carve-out
+## What was removed, and what that leaves missing
 
-Scripts compile and the EditMode suite passes. Scenes and prefabs have **not** been opened in the
-Editor since the carve, so the ones inherited from AIR still carry components whose scripts are
-gone — a `PlayerCharacter` with missing scripts, a HUD wired to screens that no longer exist.
-Expect "missing script" warnings on first open, and clean them there rather than in the YAML.
-(`SpawnManager.prefab` and `InventoryItemModule.prefab` had their netcode components stripped from
-the YAML already, since those two were identifiable by name.)
+The strip-down on 2026-09-18 took out everything AIR-specific plus every system this game does not
+yet use. Gone: flight (ornithopter, wingsuit, wing pack), the grappling hook, mounts and riding, the
+racing and minigame modes, NPC caravans and the Ostrich, save/load, the multiplayer stack, the
+procedural legged-locomotion stack, the ragdoll system, all ranged combat (`Weapon`, `Projectile`,
+`Magazine`), the player's aim rig and flashlight, the astronaut and nomad bodies, and the arena
+scene.
 
-The player prefab, `SpawnManager`'s prefab field and the main menu's scene reference are the three
-things to re-wire before a fight can actually start.
+**Audio is gone entirely** — FMOD, the banks and every `Sfx` call site. Nothing in the project makes
+a sound, and the volume settings in `GameSettings` now feed nothing. Re-adding audio means choosing
+a backend first, not restoring call sites.
+
+**UI is the main menu and nothing else.** There is no HUD: no crosshair, no health bar, no death
+screen, no interaction prompt, no damage numbers, no pause menu. `GameplayMenuScope` survives
+because `PlayerController` and `MainMenuUI` both use it.
+
+The player's animation clips under `Art/Animations/Player/` were kept deliberately — they are
+reusable — even though the body they were imported for is gone.
+
+## State of the project
+
+Scripts compile clean with no reference to a deleted type, no prefab or scene holds a dangling
+reference, and there are no orphan `.meta` files. `PlayerCharacter.prefab` is tagged `Player` and
+carries `PlayerController`, `Movement`, `PlayerLook`, `PlayerStance`, `PlayerMeleeSwing`,
+`ThirdPersonCameraBoom`, `HealthComponent`, `Interactor` and `EquipmentController`.
+
+**One EditMode test fails, and it is a design call nobody has made.**
+`PlayerBodyAndViewTests.TheEyeIsAPivotAndTheCameraRidesABoomBehindIt` asserts the camera pivot sits
+at 1.45 m. The player wears the Goblin, whose eye is at 0.68 m. Either the test follows the goblin
+or the goblin gets taller — pick one and the suite goes green.
+
+Not wired up: `GoblinEnemy.prefab` and `GoblinCamp.prefab` survive but no longer appear in any
+scene, because the arena that held them is gone. Drop them into `NatureWorld.unity` to get a fight
+running again.
 
 ## Non-negotiables for every new feature
 
@@ -69,15 +90,16 @@ Match the surrounding code and leave nothing for someone else to clean up:
 
 ### 2. Logic out of MonoBehaviours where it can be
 
-`SpaceGame.Locomotion` and the pure gameplay rules are testable without the Editor, and the
-EditMode suite is the cheapest verification this project has. A decision buried in an `Update()` is
-a decision nothing can test.
+`SpaceGame.EnemyAI` and `SpaceGame.Vegetation` are testable without the Editor, and the EditMode
+suite is the cheapest verification this project has. A decision buried in an `Update()` is a
+decision nothing can test — `EnemyBrain` is the shape to copy, a plain class the MonoBehaviour
+ticks.
 
 ## Skills
 
 | Skill | Use it for |
 | --- | --- |
-| [spacegame-agent](.claude/skills/spacegame-agent/SKILL.md) | Creatures, NPCs, enemies: AI behaviour and factions |
+| [spacegame-agent](.claude/skills/spacegame-agent/SKILL.md) | **Stale** — describes the deleted module/faction stack, not `Scripts/Enemies/`. See [docs/architecture/EnemySystem.md](docs/architecture/EnemySystem.md) |
 | [blender-model](.claude/skills/blender-model/SKILL.md) | Any 3D asset — models, props, variants — in the `.blend` library |
 
 Architecture notes live in [docs/architecture/](docs/architecture/). Both those and the skills were

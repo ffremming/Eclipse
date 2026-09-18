@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using SpaceGame.Agents;
 using SpaceGame.Characters;
 using SpaceGame.Core;
 using PlayerInputManager = SpaceGame.Core.PlayerInputManager;

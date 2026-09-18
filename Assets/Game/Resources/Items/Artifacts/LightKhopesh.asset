@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2e489ee51f24b98b3370b5014161b18, type: 3}
+  m_Name: LightKhopesh
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Items.InventoryItem
+  <ID>k__BackingField: 7a926ccb0de944de3ae482121f013a30
+  itemName: LightKhopesh
+  itemPrefab: {fileID: 1723419972818656269, guid: 935642a0a4f6d4ae4b26d887ea7dd7a8, type: 3}
+  icon: {fileID: 0}
+  iconPrefab: {fileID: 0}

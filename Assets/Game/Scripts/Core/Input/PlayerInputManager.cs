@@ -156,11 +156,10 @@ namespace SpaceGame.Core
         /// into the player's hand, to be put down wherever they then click. The 0-based slot index.
         ///
         /// <para>
-        /// The click verb on a key. The mouse counterpart is a left-click on the slot itself, which
-        /// <c>InventorySlotUI</c> hands to <c>PackHandController</c> through <c>InventoryUI</c>, and
-        /// that is the one most players will find. This stays because a key the player already
-        /// associates with that slot costs nothing and needs no aim — and because it lifts rather
-        /// than places, it cannot put anything anywhere the player did not point at.
+        /// The click verb on a key. It had a mouse counterpart — a left-click on the slot itself —
+        /// until the hotbar UI was removed, so the key is now the only way to lift a slot's item.
+        /// It costs nothing and needs no aim, and because it lifts rather than places, it cannot
+        /// put anything anywhere the player did not point at.
         /// </para>
         /// <para>
         /// Separate actions on the same physical keys rather than a second subscriber to

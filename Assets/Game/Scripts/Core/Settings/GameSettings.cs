@@ -44,7 +44,6 @@ namespace SpaceGame.Core
         private static bool loaded;
 
         private static string playerName;
-        private static int suitColorIndex;
         private static float masterVolume;
         private static float musicVolume;
         private static float sfxVolume;
@@ -76,32 +75,6 @@ namespace SpaceGame.Core
                 if (sanitised == playerName) return;
                 playerName = sanitised;
                 PlayerPrefs.SetString(Prefix + "PlayerName", playerName);
-                Raise();
-            }
-        }
-
-        /// <summary>
-        /// The suit colour this player wears, as an index into <c>SuitPalette.Swatches</c>.
-        /// <para>
-        /// Stored rather than picked per run, because it is meant to be recognisably yours:
-        /// friends learn that you are the green one. Seeded once with a random vivid swatch — see
-        /// <see cref="EnsureLoaded"/> for why that beats defaulting everyone to the same colour.
-        /// </para>
-        /// </summary>
-        public static int SuitColorIndex
-        {
-            get { EnsureLoaded(); return suitColorIndex; }
-            set
-            {
-                EnsureLoaded();
-
-                // Clamped against the palette rather than trusted: this value also arrives from
-                // PlayerPrefs written by an older build, where the list may have been longer.
-                int clamped = SuitPalette.Clamp(value);
-                if (clamped == suitColorIndex) return;
-
-                suitColorIndex = clamped;
-                PlayerPrefs.SetInt(Prefix + "SuitColorIndex", suitColorIndex);
                 Raise();
             }
         }
@@ -351,7 +324,7 @@ namespace SpaceGame.Core
         {
             foreach (string key in new[]
             {
-                "PlayerName", "SuitColorIndex", "MasterVolume", "MusicVolume", "SfxVolume", "UiVolume", "AmbienceVolume",
+                "PlayerName", "MasterVolume", "MusicVolume", "SfxVolume", "UiVolume", "AmbienceVolume",
                 "MouseSensitivity", "InvertLookY", "InvertHotbarScroll", "DevMode", "FieldOfView",
                 "QualityLevel", "Fullscreen", "ResolutionIndex", "VSync", "FrameRateCap", "Version",
             })
@@ -385,18 +358,6 @@ namespace SpaceGame.Core
                 PlayerPrefs.SetString(Prefix + "PlayerName", playerName);
             }
 
-            // Random, and written down the moment it is drawn, for the same reason as the name
-            // above: a player who never opens the cycler still gets a suit rather than always the
-            // first swatch in the list.
-            if (PlayerPrefs.HasKey(Prefix + "SuitColorIndex"))
-            {
-                suitColorIndex = SuitPalette.Clamp(PlayerPrefs.GetInt(Prefix + "SuitColorIndex"));
-            }
-            else
-            {
-                suitColorIndex = SuitPalette.RandomDefault();
-                PlayerPrefs.SetInt(Prefix + "SuitColorIndex", suitColorIndex);
-            }
 
             masterVolume = PlayerPrefs.GetFloat(Prefix + "MasterVolume", 1f);
             musicVolume = PlayerPrefs.GetFloat(Prefix + "MusicVolume", 0.7f);

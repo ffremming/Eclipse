@@ -22,10 +22,6 @@ namespace SpaceGame.Characters
         [Tooltip("Speed while crouched.")]
         [SerializeField] private float crouchSpeed = 2.6f;
 
-        [Tooltip("Speed while aiming. Below crouch speed reads as sluggish; above walk speed " +
-                 "makes aiming free.")]
-        [SerializeField] private float aimSpeed = 3.5f;
-
         [SerializeField, Range(0f, 1f)] private float airControl = 0.3f;
 
         [Tooltip("Upward speed, in m/s, above which a carried fling still counts as in flight — " +
@@ -60,7 +56,6 @@ namespace SpaceGame.Characters
         [SerializeField] private Animator animator;
         [SerializeField] private CapsuleCollider playerCollider;
         private PlayerStance stance;
-        private PlayerAimRig aimRig;
         private Vector2 moveInput;
         private float jumpCooldownTimer;
         private bool jumpOnCooldown;
@@ -121,20 +116,14 @@ namespace SpaceGame.Characters
         /// reading of it in which the player is having a good time — so it is corrected here rather
         /// than diagnosed later.
         ///
-        /// Two things are allowed to hold the body and are left alone.
-        ///
-        ///   * A rider being carried. <c>MountModule</c> makes the body kinematic on purpose and
-        ///     parents the player into the mount, and freeing it would drop them through their own
-        ///     seat. Phrased as "has a parent" rather than a MountModule lookup, the same way
-        ///     <c>UnderTerrainGuard.Evaluate</c> decides the same question, so any future carrier is
-        ///     covered without being named.
-        ///   * Somebody else's player. Netcode keeps a remote body kinematic deliberately, and this
-        ///     component is disabled on those anyway — the ownership test is what makes that a rule
-        ///     rather than a coincidence.
+        /// One thing is allowed to hold the body and is left alone: a carrier that has parented
+        /// the player into itself and made the body kinematic on purpose. Freeing it would drop
+        /// them out of whatever is carrying them. The question is asked as "has a parent" rather
+        /// than as a lookup of one named carrier, so the next one is covered without being named.
         ///
         /// It warns the first time it fires, because a body that reaches this state has come from a
-        /// bug somewhere else and a silent repair would hide it. <c>RigidbodySaveable</c> was that
-        /// bug once; the warning is what makes the next one findable.
+        /// bug somewhere else and a silent repair would hide it; the warning is what makes that bug
+        /// findable.
         /// </summary>
         public void EnsureMovableBody()
         {
@@ -170,7 +159,6 @@ namespace SpaceGame.Characters
                 // first means the order of these branches stops being something anyone has to
                 // think about.
                 if (stance != null && stance.IsCrouching) return crouchSpeed;
-                if (aimRig != null && aimRig.IsAiming) return Mathf.Min(aimSpeed, moveSpeed);
                 if (stance == null) return moveSpeed;
                 return stance.IsSprinting ? sprintSpeed : moveSpeed;
             }
@@ -179,7 +167,6 @@ namespace SpaceGame.Characters
         private void Awake()
         {
             stance = GetComponent<PlayerStance>();
-            aimRig = GetComponent<PlayerAimRig>();
         }
 
         private void Start()

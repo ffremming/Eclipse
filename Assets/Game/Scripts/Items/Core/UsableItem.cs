@@ -1,7 +1,5 @@
 using System;
-using FMODUnity;
 using UnityEngine;
-using SpaceGame.Audio;
 using SpaceGame.Presentation;
 
 namespace SpaceGame.Items
@@ -21,13 +19,6 @@ namespace SpaceGame.Items
     public abstract class UsableItem : MonoBehaviour, IItemStateCarrier
     {
         [SerializeField] private int maxUses = -1; // -1 means unlimited uses
-
-        // Deliberately None rather than a sensible-looking default: Weapon derives from this and
-        // plays its own fire sound, so anything non-None here would double up on every shot. Items
-        // that want a use sound opt in, per item.
-        [Tooltip("Sound this item makes when used. Leave at None for items whose own logic makes the noise.")]
-        [SerializeField] protected SfxId useSoundId = SfxId.None;
-        [SerializeField] protected EventReference useSound;
 
         private int currentUses = 0;
 
@@ -103,17 +94,15 @@ namespace SpaceGame.Items
         }
 
         /// <summary>
-        /// Play the use: sound always, plus whatever <see cref="Present"/> draws.
+        /// Play the use: whatever <see cref="Present"/> draws.
         ///
         /// Deliberately not gated on <see cref="CanUse"/>, so a press on a spent artifact still
-        /// makes its noise rather than passing in silence.
+        /// shows something rather than passing in silence.
         /// </summary>
         public void PlayUse(GameObject useOwner, UseContext context = default)
         {
             owner = useOwner;
             UseRequest = context;
-
-            Sfx.Play(useSoundId, transform.position, useSound, GetInstanceID());
 
             Present();
         }

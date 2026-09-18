@@ -3,8 +3,9 @@
     "rootNamespace": "",
     "references": [
         "SpaceGame.Vegetation",
-        "SpaceGame.Locomotion",
         "SpaceGame.Teleporting",
+        "SpaceGame.EnemyAI",
+        "SpaceGame.Menu",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

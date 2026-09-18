@@ -1,10 +1,9 @@
-// What PlayerCharacter.prefab must hold once the third-person and Nomad-body tools have run.
+// What PlayerCharacter.prefab must hold once the third-person tool has run.
 //
-// Both are prefab surgeries with references spread over half a dozen components, and the
-// failure mode of a missed one is quiet: a stance that still crouches the camera instead of
-// the eye, an interaction ray cast from behind the shoulder, a body whose soles float a hand's
-// breadth above the ground. These pin the wiring so a later prefab edit cannot undo it
-// unnoticed.
+// It is a prefab surgery with references spread over half a dozen components, and the failure
+// mode of a missed one is quiet: a stance that still crouches the camera instead of the eye, an
+// interaction ray cast from behind the shoulder. These pin the wiring so a later prefab edit
+// cannot undo it unnoticed.
 //
 // In Editor/ rather than beside the other EditMode tests because these touch the editor
 // tools' constants and Assembly-CSharp types.
@@ -43,7 +42,7 @@ namespace SpaceGame.EditorTools
             Assert.AreEqual(PlayerThirdPersonSetup.PivotName, pivot.name);
             Assert.AreSame(root.transform, pivot.parent, "The pivot must hang directly off the body.");
             Assert.AreEqual(1.45f, pivot.localPosition.y, 0.05f,
-                            "The eye moved: AimPose.Eye, the stance and the remote aim pose assume 1.45 m.");
+                            "The eye moved: the stance and the interaction ray assume 1.45 m.");
             Assert.Less(camera.transform.localPosition.z, -1f, "The camera is not behind the pivot.");
 
             var boom = pivot.GetComponent<ThirdPersonCameraBoom>();
@@ -80,32 +79,49 @@ namespace SpaceGame.EditorTools
                              "Enabling the pivot must yield an active camera.");
         }
 
+        // Where the body meets the ground.
+        //
+        // Everything that puts a player down puts the ROOT on a ground point: SpawnPoint resolves
+        // one by raycast, a rebuilt world drops the prefab on the terrain, a designer drags it into
+        // the scene view. So the root has to BE the contact point — the underside of the capsule
+        // and the soles of the feet, both at y = 0 in the body's own space.
+        //
+        // Neither was. The root sat 0.80 m up the character's chest and the capsule hung a further
+        // 0.20 m below the feet, so setting the body down on the terrain buried the capsule a metre
+        // deep and left the body floating a fifth of one. That is the "I fall through the floor the
+        // moment I press play" this prefab shipped with, and SpawnPoint.groundClearance — a 1.2 m
+        // lift applied to every spawn everywhere — was the plaster over it.
         [Test]
-        public void ThePlayerWearsTheNomadWhereTheAstronautStood()
+        public void TheBodyStandsOnItsOwnPivot()
         {
-            GameObject body = PlayerModelSetup.FindBody(root, out string source);
-            Assert.IsNotNull(body, "No character FBX instance under the player.");
-            Assert.AreEqual(PlayerModelSetup.NomadFbxPath, source);
+            var capsule = root.GetComponentInChildren<CapsuleCollider>(true);
+            Assert.IsNotNull(capsule, "The player has no capsule to stand on.");
+            Assert.AreEqual(0f, UndersideOf(capsule), 0.02f,
+                            "The bottom of the capsule must rest on the body's own pivot. Every "
+                            + "position the game measures is a point on the ground, and whatever "
+                            + "the capsule hangs below the pivot is how deep it is buried.");
 
-            Assert.IsTrue(PlayerModelSetup.Measure(root.transform, body, out float low, out float high));
-            Assert.AreEqual(-1f, low, 0.1f, "The soles must meet the capsule's sole a metre under the pivot.");
-            Assert.That(high - low, Is.InRange(2.5f, 3.5f), "The Nomad is not the height the player was.");
+            var skin = root.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            Assert.IsNotNull(skin, "The player has no body.");
+            Assert.IsNotNull(skin.rootBone, "The body has no root bone to stand on.");
+            Assert.AreEqual(0f, root.transform.InverseTransformPoint(skin.rootBone.position).y, 0.02f,
+                            "The feet must meet the same pivot the capsule does, or the body "
+                            + "hovers over the ground it is standing on.");
+        }
 
-            var animator = root.GetComponent<Animator>();
-            Assert.IsNotNull(animator.avatar);
-            Assert.IsTrue(animator.avatar.isHuman, "The root Animator needs a Humanoid avatar for the hand sockets.");
-            StringAssert.Contains("nomad", animator.avatar.name.ToLowerInvariant());
-
-            int capes = 0;
-            foreach (var renderer in body.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-            {
-                if (!renderer.name.StartsWith("Cloth_Cape_")) continue;
-                capes++;
-                StringAssert.StartsWith("NomadCloth_", renderer.sharedMaterial.name,
-                                        $"'{renderer.name}' wears the FBX's dead material — no wind, no suit colour.");
-            }
-
-            Assert.AreEqual(2, capes, "The cloak and its shoulder flap should both be present.");
+        // The lowest point of the capsule in the body's own space.
+        //
+        // Measured rather than read off center, because the capsule hangs on a child carrying its
+        // own scale: Unity sizes a capsule by that scale — height along Y, radius by the wider of
+        // X and Z — and then refuses to make it shorter than its own diameter.
+        private float UndersideOf(CapsuleCollider capsule)
+        {
+            Transform on = capsule.transform;
+            float alongY = Mathf.Abs(on.lossyScale.y);
+            float across = Mathf.Max(Mathf.Abs(on.lossyScale.x), Mathf.Abs(on.lossyScale.z));
+            float height = Mathf.Max(capsule.height * alongY, capsule.radius * across * 2f);
+            Vector3 centre = root.transform.InverseTransformPoint(on.TransformPoint(capsule.center));
+            return centre.y - height * 0.5f;
         }
 
         private static Object Reference(Component component, string property)

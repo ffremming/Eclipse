@@ -22,11 +22,14 @@ MonoBehaviour:
   positionJitter: 0.4
   noiseOctaves: 3
   noisePersistence: 0.45
+  clusterCount: 0
+  clusterRadius: 20
+  perCluster: 0
   items:
   - prefab: {fileID: 2932278411288283559, guid: d2d7c0b71772d4331a2724deb845393e, type: 3}
     weight: 1
     scale:
-      Min: 0.8
+      Min: 0.85
       Max: 1.25
     yaw:
       Min: 0
@@ -40,7 +43,7 @@ MonoBehaviour:
   - prefab: {fileID: 2680810953091244308, guid: e734d5fb4d3f04e08b574896801bf8fb, type: 3}
     weight: 1
     scale:
-      Min: 0.8
+      Min: 0.85
       Max: 1.25
     yaw:
       Min: 0

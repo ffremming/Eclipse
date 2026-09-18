@@ -51,10 +51,11 @@ namespace SpaceGame.EditorTools
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Terrain terrain = BuildTerrain();
             BuildSea();
-            BuildSun();
+            Transform sun = BuildSun();
             BuildWind();
             BuildCamera();
             VegetationField field = BuildField(terrain);
+            AtmosphereSetup.Build(sun);
 
             TerrainGrassDetail.Paint(terrain, SeaLevel + 1.5f, Seed);
 
@@ -109,22 +110,33 @@ namespace SpaceGame.EditorTools
             sea.transform.localScale = Vector3.one * (SizeMetres * 0.2f);
             Object.DestroyImmediate(sea.GetComponent<Collider>());
 
+            // Near-black and still glossy. The colour is almost gone but the smoothness is not, so
+            // the water reads as a dark mirror — which is what makes the player's own light appear
+            // in it, and is the only thing that tells the player there is water there at all.
             Material water = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            water.color = new Color(0.13f, 0.30f, 0.38f);
-            water.SetFloat("_Smoothness", 0.85f);
+            water.color = new Color(0.017f, 0.021f, 0.024f);
+            water.SetFloat("_Smoothness", 0.92f);
             sea.GetComponent<MeshRenderer>().sharedMaterial = water;
         }
 
-        private static void BuildSun()
+        /// <summary>
+        /// The directional light. Its colour and intensity are left to <see cref="AtmosphereSetup"/>,
+        /// which owns how bright the world is; what is decided here is only where it comes from.
+        /// </summary>
+        private static Transform BuildSun()
         {
             GameObject sun = new GameObject("Sun");
-            sun.transform.rotation = Quaternion.Euler(48f, 35f, 0f);
+
+            // Two constraints pull against each other here. Low raking light gives the terrain
+            // shape, and flat terrain in a dark world is unreadable. But this angle is also where
+            // the eclipse sits in the sky, and on the horizon it would spend half the world hidden
+            // behind the island. This clears the terrain while still raking.
+            sun.transform.rotation = Quaternion.Euler(24f, 35f, 0f);
 
             Light light = sun.AddComponent<Light>();
             light.type = LightType.Directional;
-            light.intensity = 1.3f;
-            light.color = new Color(1f, 0.96f, 0.88f);
             light.shadows = LightShadows.Soft;
+            return sun.transform;
         }
 
         /// <summary>

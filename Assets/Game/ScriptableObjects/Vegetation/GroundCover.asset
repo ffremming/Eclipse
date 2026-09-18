@@ -22,6 +22,9 @@ MonoBehaviour:
   positionJitter: 0.4
   noiseOctaves: 3
   noisePersistence: 0.45
+  clusterCount: 0
+  clusterRadius: 20
+  perCluster: 0
   items:
   - prefab: {fileID: 27537699816483596, guid: b0aa639c29e764d8391001c06005d8a8, type: 3}
     weight: 1

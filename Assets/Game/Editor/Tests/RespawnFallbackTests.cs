@@ -96,12 +96,12 @@ namespace SpaceGame.EditorTools
         public void AWorkingSpawnPoint_IsStillWhereYouComeBack()
         {
             BuildOutside();
-            BuildShip(ceilingHeight: 5f);
+            SpawnPoint point = BuildShip(ceilingHeight: 5f);
             SpawnManager manager = NewSpawnManager();
 
             Assert.IsTrue(manager.TryGetRespawnPosition(new Vector3(40f, 1.2f, 40f), out Vector3 position));
 
-            Assert.AreEqual(2.2f, position.y, 0.01f,
+            Assert.AreEqual(1f + point.GroundClearance, position.y, 0.01f,
                 "One ground clearance above the bay floor, which is a metre above the sand.");
             Assert.Less(new Vector2(position.x, position.z).magnitude, MinOpenGroundRadius,
                 "The fallback only exists for a refusal. A bay that can seat them must still be " +

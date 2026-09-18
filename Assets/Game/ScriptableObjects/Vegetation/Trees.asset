@@ -14,19 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: SpaceGame.Vegetation::SpaceGame.Vegetation.VegetationLayerAsset
   mode: 0
   clearingRadius: 0
-  count: 180
-  minDistance: 10
+  count: 70
+  minDistance: 14
   patchSize: 0
   coverage: 0
   spacing: 0
   positionJitter: 0.4
   noiseOctaves: 3
   noisePersistence: 0.45
+  clusterCount: 0
+  clusterRadius: 20
+  perCluster: 0
   items:
   - prefab: {fileID: 1159764609296385479, guid: 25cfd2b5be07e4d919be420d8a4ba1db, type: 3}
     weight: 1
     scale:
-      Min: 0.8
+      Min: 0.85
       Max: 1.25
     yaw:
       Min: 0
@@ -40,7 +43,7 @@ MonoBehaviour:
   - prefab: {fileID: 6266211596661028455, guid: fd8727472b3c043e49999161f12afc9f, type: 3}
     weight: 1
     scale:
-      Min: 0.8
+      Min: 0.85
       Max: 1.25
     yaw:
       Min: 0
@@ -54,7 +57,7 @@ MonoBehaviour:
   - prefab: {fileID: 8211741054271792591, guid: d16514f922e4942218232a0c4252a33f, type: 3}
     weight: 1
     scale:
-      Min: 0.8
+      Min: 0.85
       Max: 1.25
     yaw:
       Min: 0
@@ -66,9 +69,9 @@ MonoBehaviour:
       Min: 0
       Max: 0.03
   - prefab: {fileID: 4306542044718264431, guid: 4c6cc097674d74d918d60364077f2e0f, type: 3}
-    weight: 4
+    weight: 1
     scale:
-      Min: 0.8
+      Min: 0.85
       Max: 1.25
     yaw:
       Min: 0

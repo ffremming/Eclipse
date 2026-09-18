@@ -1,5 +1,4 @@
 using UnityEngine;
-using SpaceGame.Weapons;
 
 namespace SpaceGame.Items
 {
@@ -9,7 +8,7 @@ namespace SpaceGame.Items
     /// <para>
     /// Every held object in the game passes through here — the player's artifacts by way of
     /// <see cref="EquipmentController"/>, an NPC's weapons by way of
-    /// <c>EntityEquipmentController</c> — so this is the one place that has to get the pose right,
+    /// an NPC's own equipment code — so this is the one place that has to get the pose right,
     /// and the one place that can.
     /// </para>
     /// <para>
@@ -166,11 +165,6 @@ namespace SpaceGame.Items
         private Transform ResolveGripPoint(GameObject item, ItemGrip grip, Bounds localBounds)
         {
             if (grip != null) return grip.GripPoint;
-
-            // A weapon already carries a hand-authored grip under a different name. Honouring it
-            // here is what lets the special case that used to live in this class go away.
-            var weapon = item.GetComponent<Weapon>();
-            if (weapon != null && weapon.Handle1 != null) return weapon.Handle1;
 
             // Nothing authored. Hold it through the middle of its own mesh.
             var proxy = new GameObject("GripPoint (auto)").transform;

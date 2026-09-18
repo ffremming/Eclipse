@@ -1,0 +1,98 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e1e99aa2316e45538ae2ac76bbd71a6, type: 3}
+  m_Name: TreeClusters
+  m_EditorClassIdentifier: SpaceGame.Vegetation::SpaceGame.Vegetation.VegetationLayerAsset
+  mode: 2
+  clearingRadius: 0
+  count: 0
+  minDistance: 4.5
+  patchSize: 0
+  coverage: 0
+  spacing: 0
+  positionJitter: 0.4
+  noiseOctaves: 3
+  noisePersistence: 0.45
+  clusterCount: 80
+  clusterRadius: 24
+  perCluster: 30
+  items:
+  - prefab: {fileID: 5779629262751041144, guid: 23a959ea6ecf746769ab1b89d5228b7e, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 6427528015880684290, guid: 33aaec5eab9964cd489646e7be4cd47b, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 6010984449838368433, guid: efd258b8c684d46929b9125e93251e6d, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 4295843266981930287, guid: e401b85df942b42f7b871d79e170b524, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
+  - prefab: {fileID: 2012018047637573769, guid: 9e24b9f371f4e44beaa7bf3a24155f3c, type: 3}
+    weight: 1
+    scale:
+      Min: 0.85
+      Max: 1.25
+    yaw:
+      Min: 0
+      Max: 360
+    tilt:
+      Min: 0
+      Max: 10
+    sink:
+      Min: 0
+      Max: 0.03
