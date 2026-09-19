@@ -34,6 +34,12 @@ namespace SpaceGame.Gameplay
         [SerializeField] private int maxHealth = 100;
         public int GetMaxHealth => maxHealth;
 
+        [Tooltip("Left empty, a blow takes as much health as it does damage. Set on the player, whose " +
+                 "health is their light: every point is one orb, and a blow takes the orbs it is " +
+                 "worth instead. Events still report the blow itself, so a listener sizing its " +
+                 "reaction to the hit sees the same number whichever kind of health this is.")]
+        [SerializeField] private LightCost lightCost;
+
         [SerializeField] private int currentHealth = 100;
         public int GetHealth => currentHealth;
 
@@ -59,7 +65,7 @@ namespace SpaceGame.Gameplay
             if (amount <= 0 || !Alive) return;
 
             LastDamageSource = source;
-            currentHealth -= amount;
+            currentHealth -= lightCost != null ? lightCost.OrbsFor(amount) : amount;
 
             OnDamage?.Invoke(amount);
 

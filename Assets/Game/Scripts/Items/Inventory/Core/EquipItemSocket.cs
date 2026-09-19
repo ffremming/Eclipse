@@ -84,12 +84,24 @@ namespace SpaceGame.Items
             if (!prefab || socket == null)
                 return null;
 
-            currentObject = Object.Instantiate(prefab, socket);
+            return Take(Object.Instantiate(prefab, socket));
+        }
 
-            Sanitize(currentObject);
-            Seat(currentObject);
+        /// <summary>
+        /// Put an item that already exists in the hand — a sword modelled into the character's own
+        /// mesh, say, which no prefab was ever instantiated for. Seated exactly as an equipped one
+        /// is, so a prop held this way is tuned by the same <see cref="ItemGrip"/> rules.
+        /// </summary>
+        public GameObject Hold(GameObject item)
+        {
+            Unequip();
 
-            return currentObject;
+            if (!item || socket == null)
+                return null;
+
+            item.transform.SetParent(socket, false);
+
+            return Take(item);
         }
 
         public void Unequip()
@@ -118,6 +130,16 @@ namespace SpaceGame.Items
         }
 
         // ── Seating ──────────────────────────────────────────────────────────────
+
+        private GameObject Take(GameObject item)
+        {
+            currentObject = item;
+
+            Sanitize(item);
+            Seat(item);
+
+            return item;
+        }
 
         private void Seat(GameObject item)
         {

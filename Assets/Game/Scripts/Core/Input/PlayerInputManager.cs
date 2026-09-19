@@ -90,16 +90,40 @@ namespace SpaceGame.Core
         private InputAction aim;
 
         /// <summary>
-        /// Deploy: Q, left gamepad shoulder. A press, not a hold — the wingsuit opens on one
-        /// press mid-air and folds on the next.
+        /// The weapon wheel's key went down: Q. Held rather than toggled — the wheel is up for as
+        /// long as the key is, and letting go is what picks.
         ///
-        /// Built in code for the same reason <see cref="OnAimPressed"/> is. Q is also the
-        /// Turn axis's negative half in the generated asset, but nothing reads Turn on foot —
-        /// it is a mount control — so the two never fire for the same person at the same time.
+        /// Built in code for the same reason <see cref="OnAimPressed"/> is. Q is also the Turn
+        /// axis's negative half in the generated asset, but nothing reads Turn on foot — it is a
+        /// mount control — so the two never fire for the same person at the same time.
+        ///
+        /// Keyboard only for now. The wheel is steered by the look delta, which for a mouse is
+        /// pixels and for a stick is a deflection, and only the first is tuned.
         /// </summary>
-        public event Action OnDeployPressed;
+        public event Action OnWeaponWheelPressed;
 
-        private InputAction deploy;
+        /// <summary>
+        /// The wheel's key came up. Also raised by the Input System when the action is disabled,
+        /// which is how a wheel left open across a death or a cutscene gets closed — see
+        /// <see cref="OnWeaponWheelPressed"/> for the consumer that tells the two apart.
+        /// </summary>
+        public event Action OnWeaponWheelReleased;
+
+        /// <summary>
+        /// Is the weapon wheel's key down right now? Latched from the same two callbacks, so it can
+        /// never disagree with them, and cleared in <see cref="OnDisable"/> for the same reason
+        /// <see cref="CrouchHeld"/> is.
+        /// </summary>
+        public bool WeaponWheelHeld { get; private set; }
+
+        /// <summary>
+        /// This frame's look delta while the wheel is up, and zero otherwise. The look input is
+        /// handed to the wheel instead of the camera for as long as it is open, so that steering the
+        /// pointer does not also swing the view.
+        /// </summary>
+        public Vector2 WheelPointerDelta { get; private set; }
+
+        private InputAction weaponWheel;
 
         /// <summary>
         /// Crouch, held rather than toggled: pressed and released are both published, and
@@ -309,9 +333,8 @@ namespace SpaceGame.Core
             packRack.AddBinding("<Keyboard>/r").WithGroup("Keyboard&Mouse");
             packRack.AddBinding("<Gamepad>/buttonNorth").WithGroup("Gamepad");
 
-            deploy = new InputAction("Deploy", InputActionType.Button);
-            deploy.AddBinding("<Keyboard>/q").WithGroup("Keyboard&Mouse");
-            deploy.AddBinding("<Gamepad>/leftShoulder").WithGroup("Gamepad");
+            weaponWheel = new InputAction("WeaponWheel", InputActionType.Button);
+            weaponWheel.AddBinding("<Keyboard>/q").WithGroup("Keyboard&Mouse");
 
             BindActions();
         }
@@ -344,7 +367,9 @@ namespace SpaceGame.Core
             inputs.Player.Interact.performed += _ => OnInteractPressed?.Invoke();
             inputs.Player.Jump.performed     += _ => OnJumpPressed?.Invoke();
             inputs.Player.Dash.performed   += _ => OnDashPressed?.Invoke();
-            inputs.Player.Use.performed   += _ => OnUsePressed?.Invoke();
+            // Not while the wheel is up: the click that picks a weapon on a pointer-driven wheel, or
+            // a stray one on the way there, must not also be a swing.
+            inputs.Player.Use.performed   += _ => { if (!WeaponWheelHeld) OnUsePressed?.Invoke(); };
             inputs.Player.Use.canceled    += _ => OnUseReleased?.Invoke();
             inputs.Player.Backpack.performed += _ => OnBackpackPressed?.Invoke();
             inputs.Player.Crouch.performed += _ => { CrouchHeld = true;  OnCrouchPressed?.Invoke(); };
@@ -368,7 +393,8 @@ namespace SpaceGame.Core
             }
 
             packRack.performed += _ => OnPackRackPressed?.Invoke();
-            deploy.performed += _ => OnDeployPressed?.Invoke();
+            weaponWheel.performed += _ => { WeaponWheelHeld = true;  OnWeaponWheelPressed?.Invoke(); };
+            weaponWheel.canceled  += _ => { WeaponWheelHeld = false; OnWeaponWheelReleased?.Invoke(); };
         }
 
         private void OnEnable()
@@ -376,7 +402,7 @@ namespace SpaceGame.Core
             EnsureInputs();
             inputs.Enable();
             aim?.Enable();
-            deploy?.Enable();
+            weaponWheel?.Enable();
         }
 
         private void OnDisable()
@@ -385,7 +411,7 @@ namespace SpaceGame.Core
             // and building one here just to disable it would leak it past OnDestroy.
             inputs?.Disable();
             aim?.Disable();
-            deploy?.Disable();
+            weaponWheel?.Disable();
             packYaw?.Disable();
             packYawAccumulator = 0f;
 
@@ -399,8 +425,10 @@ namespace SpaceGame.Core
             // movement vector waiting for the next system that reads it.
             MoveInput = Vector2.zero;
             LookInput = Vector2.zero;
+            WheelPointerDelta = Vector2.zero;
             CrouchHeld = false;
             AimHeld = false;
+            WeaponWheelHeld = false;
         }
 
         private void OnDestroy()
@@ -411,8 +439,8 @@ namespace SpaceGame.Core
             aim?.Dispose();
             aim = null;
 
-            deploy?.Dispose();
-            deploy = null;
+            weaponWheel?.Dispose();
+            weaponWheel = null;
 
             packYaw?.Dispose();
             packYaw = null;
@@ -497,7 +525,11 @@ namespace SpaceGame.Core
 
         private void Update()
         {
-            LookInput = inputs.Player.Look.ReadValue<Vector2>();
+            // The one look input is either the camera's or the wheel's, never both.
+            Vector2 look = inputs.Player.Look.ReadValue<Vector2>();
+            LookInput = WeaponWheelHeld ? Vector2.zero : look;
+            WheelPointerDelta = WeaponWheelHeld ? look : Vector2.zero;
+
             MoveInput = inputs.Player.Move.ReadValue<Vector2>();
         }
     }

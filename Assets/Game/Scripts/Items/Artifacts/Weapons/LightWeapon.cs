@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SpaceGame.Gameplay;
+using SpaceGame.Presentation;
 
 namespace SpaceGame.Items
 {
@@ -51,6 +52,11 @@ namespace SpaceGame.Items
         [SerializeField] private float trailIntensity = 3.0f;
 
         [Header("Swing")]
+        [Tooltip("The colours of the light the player's swing throws while this weapon is held. " +
+                 "Spectrum is the four-hue slash; Orb keeps to the palette of the weapon's own ball " +
+                 "of light, for a weapon that already has one and should not gain any other colour.")]
+        [SerializeField] private SlashPalette swingPalette = SlashPalette.Spectrum;
+
         [Tooltip("How long one swing takes, in seconds. Also how long the trail is drawn for.")]
         [SerializeField] private float swingDuration = 0.42f;
 
@@ -72,6 +78,9 @@ namespace SpaceGame.Items
         private float swingT = -1f;
         private MaterialPropertyBlock block;
         private SpaceGame.Characters.PlayerMeleeSwing holderSwing;
+
+        /// <summary>Which colours the light of the player's swing takes while this is held.</summary>
+        public SlashPalette SwingPalette => swingPalette;
 
         /// <summary>How long one swing takes, in seconds. A weapon with its own motion fits it to this.</summary>
         protected float SwingDuration => swingDuration;

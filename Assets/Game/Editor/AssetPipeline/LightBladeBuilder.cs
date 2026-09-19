@@ -51,18 +51,18 @@ namespace SpaceGame.EditorTools
             }
 
             // Fast, tight and light. The baseline the other two are felt against.
-            Build("LightSword", SwordModel, arc, length: 0.95f, reach: 1.6f, arcRadius: 1.2f,
-                  damage: 22, swing: 0.36f, trailWidth: 0.34f, trailTime: 0.22f);
+            Build("LightSword", SwordModel, arc, length: 0.95f, handle: HandleEnd.LowEnd, gripAlong: 0.16f,
+                  reach: 1.6f, arcRadius: 1.2f, damage: 22, swing: 0.36f, trailWidth: 0.34f, trailTime: 0.22f);
 
             // A curved hook of a blade, so it is the short quick one — less reach than the sword,
             // faster, and the widest trail because the curve is what the eye follows.
-            Build("LightKhopesh", KhopeshModel, arc, length: 0.72f, reach: 1.35f, arcRadius: 1.35f,
-                  damage: 19, swing: 0.30f, trailWidth: 0.42f, trailTime: 0.24f);
+            Build("LightKhopesh", KhopeshModel, arc, length: 0.72f, handle: HandleEnd.HighEnd, gripAlong: 0.15f,
+                  reach: 1.35f, arcRadius: 1.35f, damage: 19, swing: 0.30f, trailWidth: 0.42f, trailTime: 0.24f);
 
             // Slower, wider and harder. These numbers ARE the difference between an axe and a
             // sword — there is no axe class, only an axe prefab.
-            Build("LightAxe", AxeModel, arc, length: 0.88f, reach: 1.5f, arcRadius: 1.7f,
-                  damage: 38, swing: 0.58f, trailWidth: 0.52f, trailTime: 0.26f);
+            Build("LightAxe", AxeModel, arc, length: 0.88f, handle: HandleEnd.HighEnd, gripAlong: 0.30f,
+                  reach: 1.5f, arcRadius: 1.7f, damage: 38, swing: 0.58f, trailWidth: 0.52f, trailTime: 0.26f);
 
             AssetDatabase.SaveAssets();
             Debug.Log("[LightBlades] Built sword, khopesh and axe. " +
@@ -70,11 +70,12 @@ namespace SpaceGame.EditorTools
         }
 
         private static void Build(string name, string modelPath, Material arc, float length,
-                                  float reach, float arcRadius, int damage, float swing,
-                                  float trailWidth, float trailTime)
+                                  HandleEnd handle, float gripAlong, float reach, float arcRadius,
+                                  int damage, float swing, float trailWidth, float trailTime)
         {
             GameObject root = new GameObject(name);
-            Transform tip = ModelMount.Mount(root.transform, modelPath, length);
+            MountedModel mounted = ModelMount.Mount(root.transform, modelPath, length, handle, gripAlong);
+            Transform tip = mounted.Tip;
 
             // The blade must not cast shadows from the light sitting inside it, or it throws a wedge
             // of shadow across whatever the player is about to hit. It still receives them.
@@ -95,7 +96,7 @@ namespace SpaceGame.EditorTools
             WireFloat(blade, "swingDuration", swing);
             WireInt(blade, "damage", damage);
 
-            Finish(root, name, length);
+            Finish(root, name, length, mounted.GripPoint);
         }
 
         /// <summary>
@@ -134,7 +135,7 @@ namespace SpaceGame.EditorTools
             return trail;
         }
 
-        private static void Finish(GameObject root, string name, float holdSize)
+        private static void Finish(GameObject root, string name, float holdSize, Vector3 gripPoint)
         {
             SphereCollider collider = root.AddComponent<SphereCollider>();
             collider.radius = 0.16f;
@@ -149,6 +150,7 @@ namespace SpaceGame.EditorTools
 
             GameObject grip = new GameObject("Grip");
             grip.transform.SetParent(root.transform, false);
+            grip.transform.localPosition = gripPoint;
 
             ItemGrip itemGrip = root.AddComponent<ItemGrip>();
             Wire(itemGrip, "gripPoint", grip.transform);

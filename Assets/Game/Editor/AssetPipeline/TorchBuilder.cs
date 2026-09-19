@@ -32,6 +32,12 @@ namespace SpaceGame.EditorTools
         /// <summary>Length of the torch once held, in metres.</summary>
         private const float TorchLength = 0.62f;
 
+        /// <summary>The end of the model's shaft that is the handle, as authored.</summary>
+        private const HandleEnd TorchHandle = HandleEnd.LowEnd;
+
+        /// <summary>How far up the shaft from the handle end the hand closes, as a fraction of it.</summary>
+        private const float TorchGripAlong = 0.25f;
+
         /// <summary>Height of the flame above the torch head, in metres.</summary>
         private const float FlameHeight = 0.34f;
 
@@ -94,7 +100,8 @@ namespace SpaceGame.EditorTools
             }
 
             GameObject root = new GameObject("Torch");
-            Transform head = ModelMount.Mount(root.transform, TorchModel, TorchLength);
+            MountedModel mounted = ModelMount.Mount(root.transform, TorchModel, TorchLength, TorchHandle, TorchGripAlong);
+            Transform head = mounted.Tip;
             StopModelShadowing(root);
 
             Material orb = AssetDatabase.LoadAssetAtPath<Material>(OrbMaterialPath);
@@ -124,7 +131,7 @@ namespace SpaceGame.EditorTools
             WireFloat(torch, "swingDuration", 0.5f);
             WireInt(torch, "damage", 16);
 
-            Finish(root);
+            Finish(root, mounted.GripPoint);
         }
 
         /// <summary>
@@ -306,7 +313,7 @@ namespace SpaceGame.EditorTools
             return trail;
         }
 
-        private static void Finish(GameObject root)
+        private static void Finish(GameObject root, Vector3 gripPoint)
         {
             SphereCollider collider = root.AddComponent<SphereCollider>();
             collider.radius = 0.16f;
@@ -321,6 +328,7 @@ namespace SpaceGame.EditorTools
 
             GameObject grip = new GameObject("Grip");
             grip.transform.SetParent(root.transform, false);
+            grip.transform.localPosition = gripPoint;
 
             ItemGrip itemGrip = root.AddComponent<ItemGrip>();
             Wire(itemGrip, "gripPoint", grip.transform);

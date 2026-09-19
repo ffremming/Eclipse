@@ -8,6 +8,7 @@
 // This decides WHEN the player swings. What a swing connects with belongs to MeleeStrike, which the
 // enemies drive from their own brains off the very same component — so the player and the goblins
 // fighting them resolve a hit through one piece of code rather than two that drift apart.
+using System;
 using SpaceGame.Core;
 using SpaceGame.Enemies;
 using SpaceGame.Gameplay;
@@ -54,6 +55,13 @@ namespace SpaceGame.Characters
 
         private PlayerInputManager input;
         private MeleeSwingSequence sequence;
+
+        /// <summary>
+        /// Raised the moment a swing's animation is started, with the attack the body's context
+        /// turned the press into. For anything that should look like the swing — the light it
+        /// throws off — rather than decide it.
+        /// </summary>
+        public event Action<SwingKind> Swung;
 
         private void Awake()
         {
@@ -115,21 +123,27 @@ namespace SpaceGame.Characters
             // player a second attack button by accident.
             if (!sequence.TrySwing(Time.time, out int index)) return false;
 
+            Swung?.Invoke(PlayForContext(index));
+            return true;
+        }
+
+        private SwingKind PlayForContext(int index)
+        {
             if (movement != null && !movement.IsOnGround)
             {
                 animator.SetTrigger(JumpAttackTrigger);
-                return true;
+                return SwingKind.JumpAttack;
             }
 
             if (stance != null && stance.IsCrouching)
             {
                 animator.SetTrigger(KickTrigger);
-                return true;
+                return SwingKind.Kick;
             }
 
             animator.SetInteger(AttackIndex, index);
             animator.SetTrigger(AttackTrigger);
-            return true;
+            return SwingKind.Slash;
         }
     }
 }

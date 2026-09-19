@@ -495,34 +495,9 @@ namespace SpaceGame.Characters
             animator.SetFloat("SpeedX", localVelocity.x, .1f, Time.deltaTime);
             animator.SetFloat("SpeedY", localVelocity.z, .1f, Time.deltaTime);
             animator.SetFloat("FallSpeed", velocity.y, .1f, Time.deltaTime);
-            animator.SetFloat("MoveAnimSpeed", StrideRate(localVelocity, crouching));
+            animator.SetFloat("MoveAnimSpeed", StrideRate.For(localVelocity, crouching ? crouchClipSpeed : runClipSpeed));
             animator.SetBool("IsGrounded", grounded);
             animator.SetBool("IsImmobalized", !groundSnapEnabled);
-        }
-
-        /// <summary>
-        /// How fast to play the walk cycle so the feet keep up with the ground.
-        ///
-        /// <para>
-        /// A blend tree picks WHICH clip plays, never how fast; the clip runs at the pace it was
-        /// authored at whatever the body is doing. So the tree's fastest anchor is also the fastest
-        /// the legs can honestly go, and a sprint past it is a run animation sliding along the
-        /// floor. Above that anchor the state's whole playback rate is scaled by however far past
-        /// it the player is, which is the only field that actually changes stride length.
-        /// </para>
-        /// <para>
-        /// Below the anchor it returns exactly 1, so ordinary walking is untouched — and so is the
-        /// idle at the centre of the tree, which a rate derived from speed would otherwise freeze
-        /// solid the moment the player stood still.
-        /// </para>
-        /// </summary>
-        private float StrideRate(Vector3 localVelocity, bool crouching)
-        {
-            float clipSpeed = crouching ? crouchClipSpeed : runClipSpeed;
-            if (clipSpeed <= 0.01f) return 1f;
-
-            float planar = new Vector2(localVelocity.x, localVelocity.z).magnitude;
-            return planar <= clipSpeed ? 1f : planar / clipSpeed;
         }
 
         private void TriggerAnimator(string triggerName)

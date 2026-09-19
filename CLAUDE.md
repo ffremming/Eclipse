@@ -34,7 +34,8 @@ is a mechanical change nobody has made yet.
 | Interaction | `Scripts/Gameplay/Interaction/` | `Interactor`, `IInteractable`, `InteractableTrigger` |
 | Spawning | `Scripts/Gameplay/Game/Spawning/` | `SpawnManager`, `SpawnPoint`, `SpawnClearance` |
 | Teleporting | `Scripts/Core/Motion/Teleport.cs`, `Scripts/Core/Teleporting/` | `Teleport.Move`, `ITeleportAware` |
-| Menu | `Scripts/Presentation/UI/` | `MainMenuUI`, `CursorSpotlight`, `RevealField`, `GameplayMenuScope` |
+| Menu | `Scripts/Presentation/UI/` | `MainMenuUI`, `CursorSpotlight`, `RevealField` |
+| Weapon wheel | `Scripts/Items/Inventory/Wheel/`, `Scripts/Presentation/UI/WeaponWheel/` | `WeaponWheel`, `RadialSelection`, `WeaponWheelView` |
 
 Scenes, and all three are what is in Build Settings: `Scenes/Core/Bootstrap.unity`,
 `Scenes/Core/MainMenu.unity` and the world, `Scenes/World/NatureWorld.unity`.
@@ -52,9 +53,12 @@ scene.
 a sound, and the volume settings in `GameSettings` now feed nothing. Re-adding audio means choosing
 a backend first, not restoring call sites.
 
-**UI is the main menu and nothing else.** There is no HUD: no crosshair, no health bar, no death
-screen, no interaction prompt, no damage numbers, no pause menu. `GameplayMenuScope` survives
-because `PlayerController` and `MainMenuUI` both use it.
+**UI is the main menu and the weapon wheel, and nothing else.** There is no HUD: no crosshair, no
+health bar, no death screen, no interaction prompt, no damage numbers, no pause menu. The wheel is
+held on Q: the game slows, the look input steers a pointer round the dial instead of the camera, and
+letting go equips the hotbar slot under it. It is built from code at runtime by `WeaponWheel`, which
+sits on the player prefab, so there is no UI prefab or scene to keep in step with it. Q used to be
+the flight-era Deploy action; nothing consumed it.
 
 The player's animation clips under `Art/Animations/Player/` were kept deliberately — they are
 reusable — even though the body they were imported for is gone.
@@ -66,10 +70,10 @@ reference, and there are no orphan `.meta` files. `PlayerCharacter.prefab` is ta
 carries `PlayerController`, `Movement`, `PlayerLook`, `PlayerStance`, `PlayerMeleeSwing`,
 `ThirdPersonCameraBoom`, `HealthComponent`, `Interactor` and `EquipmentController`.
 
-**One EditMode test fails, and it is a design call nobody has made.**
-`PlayerBodyAndViewTests.TheEyeIsAPivotAndTheCameraRidesABoomBehindIt` asserts the camera pivot sits
-at 1.45 m. The player wears the Goblin, whose eye is at 0.68 m. Either the test follows the goblin
-or the goblin gets taller — pick one and the suite goes green.
+The player wears the Human (`Art/Models/Characters/Human/Human.fbx`), a Humanoid rig built from the
+sculpt in `Art/Models/_Source~/models/characters/human_sculpt_base/`. It runs on the Goblin's
+controller and clips, retargeted through the Humanoid avatar; the enemies are still the goblins. The
+EditMode suite is green (123 tests).
 
 Not wired up: `GoblinEnemy.prefab` and `GoblinCamp.prefab` survive but no longer appear in any
 scene, because the arena that held them is gone. Drop them into `NatureWorld.unity` to get a fight

@@ -151,4 +151,38 @@ float LightPulse(float phase, float attack)
     return min(rise, fall);
 }
 
+// --- Slash spectrum ------------------------------------------------------------
+//
+// The swing trail is the one light effect that is NOT an energy ramp. The ramp above is one
+// substance getting denser; a struck slash is the opposite — it wants to look like light being
+// split, with each colour a separate layer that lives and dies on its own. So it is four discrete
+// hues, laid across the ribbon from the hilt side to the tip side, and LightSlashBands() says how
+// much of each is present at a given position across the blade.
+//
+// Blue and red are deliberately saturated and far apart. Between them white and orange sit as
+// the warm centre, so the ribbon reads as a spectrum rather than as one colour with a fringe.
+// HDR for the same reason as the ramp: additive blend into bloom.
+#define LIGHT_SLASH_BLUE   float3(0.15, 0.45, 2.00)
+#define LIGHT_SLASH_WHITE  float3(1.80, 1.75, 2.00)
+#define LIGHT_SLASH_ORANGE float3(2.20, 0.85, 0.12)
+#define LIGHT_SLASH_RED    float3(2.00, 0.07, 0.12)
+
+/// Weight of each slash hue at position v across the ribbon (0 hilt side, 1 tip side), as
+/// (blue, white, orange, red). Overlapping soft tents, so neighbours blend into each other and
+/// blue never has to blend with red directly, which is where a muddy purple would come from.
+float4 LightSlashBands(float v, float width)
+{
+    const float4 centres = float4(0.12, 0.38, 0.62, 0.88);
+    return smoothstep(0.0, 1.0, saturate(1.0 - abs(v - centres) / max(width, 1e-3)));
+}
+
+/// The four band weights to the colour they emit, before intensity.
+float3 LightSlashColour(float4 weights)
+{
+    return weights.x * LIGHT_SLASH_BLUE
+         + weights.y * LIGHT_SLASH_WHITE
+         + weights.z * LIGHT_SLASH_ORANGE
+         + weights.w * LIGHT_SLASH_RED;
+}
+
 #endif // SPACEGAME_LIGHT_PALETTE_INCLUDED

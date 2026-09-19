@@ -6,7 +6,7 @@ edit the palette and regenerate, or the two will disagree.
 Every model and component in this repository links its materials from here.
 Before adding anything, search this table for something that would serve.
 
-**54 material(s)** across 10 categor(ies).
+**56 material(s)** across 11 categor(ies).
 
 ## Emissive
 
@@ -104,6 +104,13 @@ Before adding anything, search this table for something that would serve.
 | `Mat_Plastic_Cream_Aged` | `#B8AD94` | 0.6 | 0.0 | Yellowed RV interior plastic: cabinet fronts, switch panels, light diffusers, trim mouldings. |
 | `Mat_Plastic_Rubber_Black` | `#1A1A1A` | 0.88 | 0.0 | Hoses, cable sheathing, hand grips, floor matting, door weather seals. |
 | `Mat_Plastic_Safety_Yellow` | `#F2B01E` | 0.45 | 0.0 | Injection-moulded high-vis yellow plastic: safety pins, pull rings, trigger guards, lever grips. The moulded-plastic counterpart to Mat_Paint_Safety_Orange, which is enamel sprayed onto steel. |
+
+## Stone
+
+| Name | Hex | Roughness | Metallic | Intended for |
+|---|---|---|---|---|
+| `Mat_Stone_Ash_Rough` | `#7B7B82` | 0.92 | 0.0 | Light masonry: the paler half of stacked brick and block courses on walls and towers, paired with Mat_Stone_Charcoal_Rough. Cold blue-grey so it reads as weathered ash-stone against the red roofs. Not Mat_Neutral_Panel_Grey (interior panelling, roughness 0.5) or Mat_Metal_Steel_Worn (metal). |
+| `Mat_Stone_Charcoal_Rough` | `#444449` | 0.92 | 0.0 | Dark masonry: the darker half of stacked brick and block courses on walls and towers. Sits between Mat_Neutral_Black_Matte (cores, battlements, plinths - the shadow behind the bricks) and Mat_Stone_Ash_Rough (the lighter half), so alternating courses read as stacked stone rather than flat paint. Not Mat_Neutral_Panel_Grey, which is interior panelling at roughness 0.5. |
 
 ## Wood
 

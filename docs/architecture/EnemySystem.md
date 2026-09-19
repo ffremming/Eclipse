@@ -109,7 +109,9 @@ no code. It is about 12 m long, so:
 - **The controller** (`Art/Animations/Creatures/MountainDragon.controller`) declares the Goblin
   controller's parameters (`SpeedX`, `SpeedY`, `IsGrounded`, `AttackIndex`, `Attack`, `Hurt`, `Die`)
   so `EnemyAnimator` drives it unchanged. Locomotion is a 1-D blend on `SpeedY`: Idle at 0, Walk at
-  0.4 (2 m/s of a 5 m/s `chaseSpeed`), Run at 1. `Hurt` is declared but has no state.
+  0.4 (2 m/s of a 5 m/s `chaseSpeed`), Run at 1. `Hurt` is declared but has no state. It does not
+  declare `MoveAnimSpeed`, the Goblin controller's walk-cycle rate, and `EnemyAnimator` skips writing
+  it for a controller without it.
 
 The model is the Sketchfab "Mountain Dragon" (CC-BY 4.0, Alexey Zaika), imported through
 `MountainDragon.fbx`. It arrived as one 97-second take; the importer's clip list cuts it into
