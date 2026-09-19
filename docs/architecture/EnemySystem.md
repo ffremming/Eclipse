@@ -69,6 +69,12 @@ forgets you entirely, rather than walking home still angry and turning round on 
 **Wander has hysteresis.** It leaves Wander at the wander radius but only re-enters it at the
 arrival radius. Matching the two would leave an enemy stopped on the line flipping state per tick.
 
+**Pace is the brain's call.** `EnemySettings.WalkSpeed` applies while strolling or walking home and
+`ChaseSpeed` while closing on the target; `EnemyAgent` copies the decision's `Speed` onto the
+`NavMeshAgent` each tick. `ChaseSpeed` is also what the animator treats as full throttle, so it
+should match what the fastest movement clip covers — otherwise the feet skate. Both default to the
+goblin's 3.5, so an enemy that sets neither behaves as it always did.
+
 **Melee is one implementation.** `PlayerMeleeSwing` decides *when* the player swings;
 `MeleeStrike` decides *what a swing hits*, and the enemies drive the same component. `MeleeStrike`
 uses timed windows rather than animation events because the goblin clips are shared between the
@@ -83,8 +89,46 @@ Goblin FBX and its controller as a child.
 `GoblinCamp.prefab` is an `EnemyBase` with four of them parented to it, each with `home` pointed at
 the camp. Drop it in a scene that has a baked NavMesh and it works.
 
+### The Mountain Dragon
+
+`Assets/Game/Prefabs/Enemies/MountainDragon.prefab` is the same stack at a very different scale, and
+shows what actually has to change: the numbers, the collision shape and the animator controller —
+no code. It is about 12 m long, so:
+
+- **Three capsules, not one.** `MeleeStrike` asks whether a collider's bounds *centre* is inside the
+  swing arc, so a single capsule along the body could only be hit near its middle. Torso, neck-and-head
+  and tail base are separate colliders so a swing near any of them counts.
+- **`StrikeOrigin`**, an empty 4.5 m ahead of the root, is the `MeleeStrike` origin. The root sits at
+  the pelvis, and the head slam lands well in front of it; `attackRange` (6.5 m) is measured from the
+  root and the strike sphere reaches past that.
+- **The strike timing follows the clip.** The head comes down about a second into `Attack`, so
+  `windup` is 1 s and `hitWindow` 0.35 s. Retime the two together if the clip changes.
+- **`eyeHeight` is 4.5 m**, above its own colliders. Lower and the sight ray starts inside the torso
+  and hits it, which reads as "blocked" and blinds the dragon. The same value is used for the height
+  on the player that it looks at, so it aims over the player's head; fine for a dragon.
+- **The controller** (`Art/Animations/Creatures/MountainDragon.controller`) declares the Goblin
+  controller's parameters (`SpeedX`, `SpeedY`, `IsGrounded`, `AttackIndex`, `Attack`, `Hurt`, `Die`)
+  so `EnemyAnimator` drives it unchanged. Locomotion is a 1-D blend on `SpeedY`: Idle at 0, Walk at
+  0.4 (2 m/s of a 5 m/s `chaseSpeed`), Run at 1. `Hurt` is declared but has no state.
+
+The model is the Sketchfab "Mountain Dragon" (CC-BY 4.0, Alexey Zaika), imported through
+`MountainDragon.fbx`. It arrived as one 97-second take; the importer's clip list cuts it into
+`Idle` (frames 1629–1841), `Walk` (56–343), `Run` (388–486), `Attack` (1252–1300) and `Die`
+(2027–2115). The animation is a showcase reel with no walk-with-travel: every clip is in place, so
+`applyRootMotion` is off and the `NavMeshAgent` moves it. There is no dedicated attack or death
+clip — `Attack` is one head-slam lifted from a looping sequence of them, and `Die` is a collapse to
+the ground from a longer crouch.
+
+The model is authored in centimetres and imports at scale 1, so the `Model` child carries a 0.01
+scale and an offset that puts the pelvis at the root and the soles on the ground plane.
+
 ## What is not done
 
+- **The `Die` clip is a collapse, not a death.** It plays once and holds; the collider, the
+  `HealthComponent` and the body stay in the scene.
+- **The agent is on the humanoid NavMesh.** The bake uses agent type 0 (radius 0.5), so a dragon with
+  a 1.6 m radius will clip corners and trees. A dedicated agent type would fix it; it needs its own
+  bake.
 - **No ragdoll on the enemy prefab.** `AgentRagdoll` and `RagdollRig` exist and `AgentRagdoll` has
   been repointed at `EnemyAgent`, but neither is on `GoblinEnemy.prefab` yet. Adding them is the
   obvious next step and `RagdollRig` builds itself from the skeleton.

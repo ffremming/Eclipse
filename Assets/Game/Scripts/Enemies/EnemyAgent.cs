@@ -49,6 +49,13 @@ namespace SpaceGame.Enemies
         [SerializeField] private float shoutRadius = 14f;
 
         [Header("Behaviour")]
+        [Tooltip("Metres per second while strolling around camp or walking back to it.")]
+        [SerializeField] private float walkSpeed = 3.5f;
+
+        [Tooltip("Metres per second while closing on the player. The animator treats this as full " +
+                 "throttle, so set it to what the fastest movement clip actually covers.")]
+        [SerializeField] private float chaseSpeed = 3.5f;
+
         [Tooltip("How close it gets before it stops and swings.")]
         [SerializeField] private float attackRange = 2.2f;
 
@@ -112,6 +119,8 @@ namespace SpaceGame.Enemies
                 WanderRadius = home != null ? home.WanderRadius : EnemySettings.Default.WanderRadius,
                 WanderPause = wanderPause,
                 ArrivalRadius = arrivalRadius,
+                WalkSpeed = walkSpeed,
+                ChaseSpeed = chaseSpeed,
             });
         }
 
@@ -194,6 +203,7 @@ namespace SpaceGame.Enemies
             if (decision.HasDestination)
             {
                 navAgent.isStopped = false;
+                navAgent.speed = decision.Speed;
                 navAgent.SetDestination(decision.Destination);
             }
             else if (navAgent.hasPath)
@@ -213,7 +223,7 @@ namespace SpaceGame.Enemies
                 if (enemyAnimator != null) enemyAnimator.PlayAttack();
             }
 
-            if (enemyAnimator != null) enemyAnimator.SetMovement(navAgent.velocity, navAgent.speed);
+            if (enemyAnimator != null) enemyAnimator.SetMovement(navAgent.velocity);
         }
 
         private void FaceTowards(Vector3 point)

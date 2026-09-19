@@ -6,6 +6,10 @@
 //
 // The velocity arrives in world space and is turned into the controller's local SpeedX/SpeedY pair,
 // which is what lets one blend tree cover walking forwards, backwards and sideways.
+//
+// Those two are metres per second, not a normalised direction: the Move tree anchors every clip at
+// the ground speed that clip's stride actually covers, and the player feeds it the same units from
+// Movement. Normalising here is what used to pin a chasing enemy between idle and walk.
 using SpaceGame.Gameplay;
 using UnityEngine;
 
@@ -27,7 +31,7 @@ namespace SpaceGame.Enemies
 
         [Tooltip("How many swing clips the Attack layer cycles through. Must match the number of " +
                  "swing states in the controller that AttackIndex selects between.")]
-        [SerializeField] private int swingVariations = 3;
+        [SerializeField] private int swingVariations = 5;
 
         [Tooltip("How quickly the blend tree catches up to a change in direction. Zero snaps, which " +
                  "makes an enemy rounding a corner look like it teleported into the new animation.")]
@@ -57,16 +61,15 @@ namespace SpaceGame.Enemies
 
         private bool Ready => animator != null && animator.runtimeAnimatorController != null;
 
-        /// <summary>Feed the blend tree. <paramref name="maxSpeed"/> is what full-throttle means.</summary>
-        public void SetMovement(Vector3 worldVelocity, float maxSpeed)
+        /// <summary>Feed the blend tree, in metres per second.</summary>
+        public void SetMovement(Vector3 worldVelocity)
         {
             if (!Ready) return;
 
             Vector3 local = transform.InverseTransformDirection(worldVelocity);
-            float scale = Mathf.Max(0.01f, maxSpeed);
 
-            animator.SetFloat(SpeedX, local.x / scale, damping, Time.deltaTime);
-            animator.SetFloat(SpeedY, local.z / scale, damping, Time.deltaTime);
+            animator.SetFloat(SpeedX, local.x, damping, Time.deltaTime);
+            animator.SetFloat(SpeedY, local.z, damping, Time.deltaTime);
             animator.SetBool(IsGrounded, true);
         }
 

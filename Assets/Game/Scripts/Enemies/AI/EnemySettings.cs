@@ -34,9 +34,17 @@ namespace SpaceGame.Enemies
         /// <summary>Close enough to count as "back at camp".</summary>
         public float ArrivalRadius;
 
+        /// <summary>Metres per second while strolling or walking back to camp.</summary>
+        public float WalkSpeed;
+
+        /// <summary>Metres per second while closing on the target. Also what full throttle means to the animator.</summary>
+        public float ChaseSpeed;
+
         /// <summary>Sensible values for a melee goblin, and what EnemyAgent's Inspector defaults to.</summary>
         public static EnemySettings Default => new EnemySettings
         {
+            WalkSpeed = 3.5f,
+            ChaseSpeed = 3.5f,
             AttackRange = 2.2f,
             AttackCooldown = 1.4f,
             LeashRadius = 30f,

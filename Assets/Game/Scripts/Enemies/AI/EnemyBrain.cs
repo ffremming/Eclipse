@@ -63,6 +63,7 @@ namespace SpaceGame.Enemies
                 GoHomeOrWander(ref decision, senses, time);
 
             decision.State = state;
+            decision.Speed = state == EnemyState.Chase ? settings.ChaseSpeed : settings.WalkSpeed;
             return decision;
         }
 

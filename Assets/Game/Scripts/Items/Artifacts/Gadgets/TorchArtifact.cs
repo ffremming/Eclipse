@@ -4,87 +4,91 @@ using SpaceGame.World;
 namespace SpaceGame.Items
 {
     /// <summary>
-    /// The carried torch: the player's own light, and in a world this dark the only light that
-    /// falls on anything.
+    /// The carried torch: the player's own light, and a club you can swing.
     /// <para>
-    /// One button cycles it, off through every setting and back to off, rather than one button for
-    /// on and another for brighter. The hotbar gives an item a single Use action, and a torch whose
-    /// second control lived on a key nobody could find would be a setting most players never saw.
-    /// Cycling costs one press to reach any state and is learnable in the first three presses.
+    /// Built on <see cref="LightWeapon"/> rather than beside it. A torch that flares when swung and
+    /// drags a trail of light is describing exactly what that base already does — the only things
+    /// that make it a torch rather than a sword are that it burns while it is merely being carried,
+    /// and that it has a flame on the end. Sharing the base is also what stops the torch's swing
+    /// drifting out of step with the sword's over time.
     /// </para>
     /// <para>
-    /// The light is a real <see cref="Light"/>, not a shader effect. Everything the light shaders
-    /// draw is additive self-glow that leaves the ground black; the illumination the player
-    /// navigates by has to come from the renderer's own lighting or it does not exist.
+    /// It has no on/off any more. One press is one swing, and a single Use action cannot mean both
+    /// "hit them" and "change setting" without one of the two being wrong half the time. The torch
+    /// is always lit; swinging stokes it, and the stoke decays on the base's own flare curve.
     /// </para>
     /// </summary>
-    public class TorchArtifact : ToolItem
+    public class TorchArtifact : LightWeapon
     {
-        /// <summary>State key for the current setting. Written into save files — never rename.</summary>
-        private const string LevelKey = "torchLevel";
+        /// <summary>Material property the flame shader reads to know how hard it is burning.</summary>
+        private static readonly int StokeId = Shader.PropertyToID("_Stoke");
 
-        [Header("Light")]
-        [Tooltip("The light on this prefab. Its range, colour and intensity are driven from the " +
-                 "settings below, so whatever is authored on the component itself is overwritten.")]
-        [SerializeField] private Light torchLight;
+        [Header("Flame")]
+        [Tooltip("The mesh drawn with SpaceGame/Light/LightFlame. Its _Stoke is driven by the swing.")]
+        [SerializeField] private Renderer flame;
 
-        [Tooltip("Off is setting 0 and is not listed. These are what the cycle steps through.")]
-        [SerializeField] private TorchLevel[] levels =
-        {
-            // Ember: barely a light. Short, red and restless — enough to find your feet and not
-            // enough to find anything else, which is what makes turning it up feel like a decision.
-            new TorchLevel("Ember", 5f, 1.1f, new Color(1f, 0.38f, 0.13f), 0.16f, 9f),
+        [Tooltip("The ball of light thrown off at the moment of a swing. Scaled and hidden by the " +
+                 "flare, so it exists only for the length of the burst.")]
+        [SerializeField] private Renderer burst;
 
-            // Burning: the working setting. Reaches far enough to read a space, and steady enough
-            // that the shadows it throws stay legible rather than swimming.
-            new TorchLevel("Burning", 11f, 2.4f, new Color(1f, 0.55f, 0.24f), 0.08f, 7f),
+        [Tooltip("How wide the burst grows at the peak of a swing, in metres.")]
+        [SerializeField] private float burstSize = 1.4f;
 
-            // Blazing: the whole room, and paler for it. The walk from ember to blazing is the same
-            // walk the light shaders make from fringe to core, so the torch and the attacks read as
-            // the same light at different strengths.
-            new TorchLevel("Blazing", 19f, 4.2f, new Color(1f, 0.74f, 0.48f), 0.04f, 5f),
-        };
+        [Header("Fill light")]
+        [Tooltip("The wide, weak, shadowless light that lifts the area around the player off black.")]
+        [SerializeField] private Light fill;
 
-        [Header("Feel")]
-        [Tooltip("How long the light takes to reach a new setting, in seconds. A torch that snaps " +
-                 "between settings reads as a switch rather than as a flame catching.")]
-        [SerializeField] private float settleTime = 0.18f;
+        [SerializeField] private float fillIdleIntensity = 15f;
+        [SerializeField] private float fillSwingIntensity = 48f;
 
-        [Tooltip("Metres beyond the light's range that the ash motes still react. Slightly wider " +
-                 "than the light itself, so the air ahead hints at the reach before the ground does.")]
-        [SerializeField] private float ashReachBonus = 3f;
+        [Header("Throw light")]
+        [Tooltip("The long spot that aims where the player looks. This is what actually gives the " +
+                 "torch distance: a point light spreads its energy over a whole sphere, so it dies " +
+                 "within a few metres no matter how far its range is set, while a cone puts the " +
+                 "same energy down one direction and carries it many times further.")]
+        [SerializeField] private Light throwLight;
 
-        /// <summary>0 is off; 1..levels.Length are the settings.</summary>
-        private int level;
+        [SerializeField] private float throwIdleIntensity = 260f;
+        [SerializeField] private float throwSwingIntensity = 700f;
 
-        private float shownIntensity;
-        private float shownRange;
+        [Tooltip("How fast the throw swings round to where the player is looking, in degrees per " +
+                 "second. Instant tracking reads as a head-mounted lamp; a slight lag reads as an " +
+                 "arm holding something heavy.")]
+        [SerializeField] private float throwTurnSpeed = 520f;
+
+        [Header("Swing")]
+        [Tooltip("How far ahead of the holder the swing connects, in metres.")]
+        [SerializeField] private float reach = 1.5f;
+
+        [Tooltip("Radius of the swing, in metres.")]
+        [SerializeField] private float arcRadius = 1.3f;
+
+        [Tooltip("How high off the holder's feet the swing sits, in metres.")]
+        [SerializeField] private float sweepHeight = 1.1f;
+
+        [Header("Ash")]
+        [Tooltip("Metres beyond the light's range that the ash motes still react, so the air ahead " +
+                 "hints at the reach before the ground does.")]
+        [SerializeField] private float ashReachBonus = 4f;
+
         private WorldAtmosphere atmosphere;
-
-        /// <summary>The setting the torch is on, or null when it is out.</summary>
-        private TorchLevel Current =>
-            level >= 1 && level <= levels.Length ? levels[level - 1] : null;
-
-        /// <summary>How many states the cycle has, counting off.</summary>
-        private int StateCount => levels.Length + 1;
+        private Camera view;
+        private MaterialPropertyBlock flameBlock;
 
         public override void OnEquipped(GameObject holder)
         {
             base.OnEquipped(holder);
 
-            // Found on equip rather than per frame. Equipping is rare, and a torch that searched
-            // the scene every frame for the atmosphere would be paying for something that cannot
-            // change while it is in a hand.
+            // Found on equip rather than per frame. Equipping is rare, and the atmosphere cannot
+            // change while the torch is in a hand.
             atmosphere = FindFirstObjectByType<WorldAtmosphere>();
-
-            // A torch handed over while lit should already be lit, with no fade from dark, because
-            // the fade is meant to read as the flame catching and nothing is catching here.
-            ApplyLevel(instant: true);
+            view = Camera.main;
+            flameBlock = new MaterialPropertyBlock();
         }
 
         public override void OnUnequipped(GameObject holder)
         {
-            // Stop the motes reacting to a torch that is no longer in the world. Without this they
+            // Stop the motes reacting to a torch that is no longer being carried. Without this they
             // keep glowing around the last place it was held.
             if (atmosphere != null) atmosphere.TrackLight(null, 0f);
             atmosphere = null;
@@ -92,85 +96,93 @@ namespace SpaceGame.Items
             base.OnUnequipped(holder);
         }
 
-        /// <summary>Advances the cycle. Off is part of the cycle, so this also puts it out.</summary>
-        protected override void Use()
+        /// <summary>
+        /// Where the swing connects. Flattened to the horizontal, so looking at the sky does not
+        /// lift the swing over the head of whatever is standing in front of the player.
+        /// </summary>
+        protected override void GetSweep(out Vector3 centre, out float radius)
         {
-            level = (level + 1) % StateCount;
-            ApplyLevel(instant: false);
-        }
+            radius = arcRadius;
 
-        private void LateUpdate()
-        {
-            if (torchLight == null) return;
-
-            TorchLevel current = Current;
-            float targetIntensity = current != null ? current.Intensity : 0f;
-            float targetRange = current != null ? current.Range : 0f;
-
-            // MoveTowards rather than an exponential ease, for the same reason the aim rig uses it:
-            // an exponential approaches the target and never arrives, and a torch that settles at
-            // 99.7% of its setting never quite matches the one the player last saw.
-            float step = settleTime <= 0f ? 1f : Time.deltaTime / settleTime;
-            shownIntensity = Mathf.MoveTowards(shownIntensity, targetIntensity, step * Mathf.Max(targetIntensity, 1f));
-            shownRange = Mathf.MoveTowards(shownRange, targetRange, step * Mathf.Max(targetRange, 1f));
-
-            float wander = 1f;
-            if (current != null && current.Flicker > 0f)
+            if (owner == null)
             {
-                // Perlin rather than a sine: a sine is a pulse, and a pulse reads as a machine.
-                // Sampled against this instance's id so two torches in one scene never flicker in
-                // step, which is what would give away that they are the same object.
-                float seed = GetInstanceID() * 0.017f;
-                float n = Mathf.PerlinNoise(Time.time * current.FlickerSpeed, seed);
-                wander = 1f + (n - 0.5f) * 2f * current.Flicker;
+                centre = transform.position;
+                return;
             }
 
-            torchLight.enabled = shownIntensity > 0.001f;
-            torchLight.intensity = shownIntensity * wander;
-            torchLight.range = shownRange;
-            if (current != null) torchLight.color = current.Colour;
+            Vector3 forward = owner.transform.forward;
+            forward.y = 0f;
+            forward = forward.sqrMagnitude > 1e-4f ? forward.normalized : owner.transform.forward;
 
-            // Tell the ash where the light is, every frame, because the torch moves with the hand.
-            if (atmosphere != null)
+            centre = owner.transform.position + forward * reach + Vector3.up * sweepHeight;
+        }
+
+        /// <summary>
+        /// Drives the flame and the ash from the same flare the base drives the light with, so all
+        /// three peak on the same frame instead of on three timers that slowly disagree.
+        /// </summary>
+        protected override void OnFlareChanged(float flare)
+        {
+            if (flame != null && flameBlock != null)
             {
-                float reach = shownRange > 0f ? shownRange + ashReachBonus : 0f;
-                atmosphere.TrackLight(torchLight.transform, reach);
+                flame.GetPropertyBlock(flameBlock);
+                flameBlock.SetFloat(StokeId, flare);
+                flame.SetPropertyBlock(flameBlock);
+            }
+
+            if (burst != null)
+            {
+                // Grown from nothing rather than faded from full: a burst that starts at full size
+                // and dims reads as a light being switched off, where one that expands reads as
+                // something being thrown outwards.
+                bool visible = flare > 0.01f;
+                if (burst.enabled != visible) burst.enabled = visible;
+                if (visible) burst.transform.localScale = Vector3.one * (burstSize * flare);
+            }
+
+            if (fill != null)
+            {
+                fill.intensity = Mathf.Lerp(fillIdleIntensity, fillSwingIntensity, flare);
+            }
+
+            AimThrow(flare);
+
+            if (atmosphere != null && TipLight != null)
+            {
+                // The ash reacts to the THROW's range, not the flame's, because the throw is what
+                // the player perceives as how far their light goes.
+                float reach = throwLight != null ? throwLight.range : TipLight.range;
+                atmosphere.TrackLight(TipLight.transform, reach + ashReachBonus);
             }
         }
 
-        /// <summary>Points the light at the current setting, optionally without the settle.</summary>
-        private void ApplyLevel(bool instant)
+        /// <summary>
+        /// Points the throw down the holder's aim.
+        /// <para>
+        /// Deliberately not parented to the hand. A cone welded to a swinging torch sprays its light
+        /// across the sky every time the arm moves, which reads as a strobe rather than as
+        /// illumination — and during an attack that is exactly when the player most needs to see.
+        /// Keeping it on the aim instead means the swing changes how BRIGHT the world is without
+        /// changing WHERE the player can see.
+        /// </para>
+        /// </summary>
+        private void AimThrow(float flare)
         {
-            if (torchLight == null) return;
+            if (throwLight == null) return;
 
-            TorchLevel current = Current;
-            if (instant)
-            {
-                shownIntensity = current != null ? current.Intensity : 0f;
-                shownRange = current != null ? current.Range : 0f;
-            }
+            throwLight.intensity = Mathf.Lerp(throwIdleIntensity, throwSwingIntensity, flare);
 
-            torchLight.enabled = shownIntensity > 0.001f;
-        }
+            // The view direction, because the throw exists so the player can see where they are
+            // looking. On a third-person boom that is the camera's forward, not the body's — the
+            // body lags the camera through every turn, and a lamp that lags the turn is a lamp that
+            // is always pointing at what the player has just stopped looking at.
+            Vector3 forward = view != null ? view.transform.forward
+                                           : (owner != null ? owner.transform.forward : transform.forward);
 
-        public override void CaptureItemState(ItemState state)
-        {
-            base.CaptureItemState(state);
-
-            // Only written when the torch is actually lit. Storing a 0 for every torch in every
-            // slot would put a bag on slots that hold nothing worth remembering.
-            if (state != null && level > 0) state.Set(LevelKey, level);
-        }
-
-        public override void RestoreItemState(ItemState state)
-        {
-            base.RestoreItemState(state);
-
-            // Clamped because the level list can be retuned between the save and the load, and a
-            // stored index past the end of a shortened list would otherwise throw on the first
-            // frame after loading rather than quietly falling back to the brightest setting.
-            level = state == null ? 0 : Mathf.Clamp(state.GetInt(LevelKey, 0), 0, levels.Length);
-            ApplyLevel(instant: true);
+            throwLight.transform.rotation = Quaternion.RotateTowards(
+                throwLight.transform.rotation,
+                Quaternion.LookRotation(forward),
+                throwTurnSpeed * Time.deltaTime);
         }
     }
 }

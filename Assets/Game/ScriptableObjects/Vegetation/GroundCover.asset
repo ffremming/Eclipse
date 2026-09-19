@@ -16,9 +16,9 @@ MonoBehaviour:
   clearingRadius: 0
   count: 0
   minDistance: 0
-  patchSize: 14
-  coverage: 0.3
-  spacing: 4.5
+  patchSize: 20
+  coverage: 0.35
+  spacing: 3.5
   positionJitter: 0.4
   noiseOctaves: 3
   noisePersistence: 0.45
@@ -29,8 +29,8 @@ MonoBehaviour:
   - prefab: {fileID: 27537699816483596, guid: b0aa639c29e764d8391001c06005d8a8, type: 3}
     weight: 1
     scale:
-      Min: 0.85
-      Max: 1.25
+      Min: 1.5
+      Max: 2.5
     yaw:
       Min: 0
       Max: 360
@@ -43,8 +43,8 @@ MonoBehaviour:
   - prefab: {fileID: 6569033545104878654, guid: de40389c672f146be8ad37bad17d1e53, type: 3}
     weight: 1
     scale:
-      Min: 0.85
-      Max: 1.25
+      Min: 1.5
+      Max: 2.5
     yaw:
       Min: 0
       Max: 360
@@ -57,8 +57,8 @@ MonoBehaviour:
   - prefab: {fileID: 692740395388192136, guid: 8945aa226e5eb4b36842c716c516b3cb, type: 3}
     weight: 1
     scale:
-      Min: 0.85
-      Max: 1.25
+      Min: 1.5
+      Max: 2.5
     yaw:
       Min: 0
       Max: 360
@@ -71,8 +71,8 @@ MonoBehaviour:
   - prefab: {fileID: 5340738370273563432, guid: 656dacc71bbe441529d3c3657cc63c37, type: 3}
     weight: 1
     scale:
-      Min: 0.85
-      Max: 1.25
+      Min: 1.5
+      Max: 2.5
     yaw:
       Min: 0
       Max: 360
@@ -85,8 +85,8 @@ MonoBehaviour:
   - prefab: {fileID: 4209268102502858285, guid: ead40b94f7b504993b073107af314a42, type: 3}
     weight: 1
     scale:
-      Min: 0.85
-      Max: 1.25
+      Min: 1.5
+      Max: 2.5
     yaw:
       Min: 0
       Max: 360
@@ -99,8 +99,8 @@ MonoBehaviour:
   - prefab: {fileID: 5317637764297955009, guid: d762b70e67fc74be1b2f884cd4771be1, type: 3}
     weight: 1
     scale:
-      Min: 0.85
-      Max: 1.25
+      Min: 1.5
+      Max: 2.5
     yaw:
       Min: 0
       Max: 360
@@ -113,8 +113,8 @@ MonoBehaviour:
   - prefab: {fileID: 5298983343033325685, guid: 3d6294ae07c914503af6ccb64f2b5ce9, type: 3}
     weight: 1
     scale:
-      Min: 0.85
-      Max: 1.25
+      Min: 1.5
+      Max: 2.5
     yaw:
       Min: 0
       Max: 360
@@ -127,8 +127,8 @@ MonoBehaviour:
   - prefab: {fileID: 445468873424170612, guid: ad9ffdba83b224ee4afb45de87dc78c5, type: 3}
     weight: 1
     scale:
-      Min: 0.85
-      Max: 1.25
+      Min: 1.5
+      Max: 2.5
     yaw:
       Min: 0
       Max: 360
@@ -141,8 +141,8 @@ MonoBehaviour:
   - prefab: {fileID: 589424192680527955, guid: fe53018776adb46989fe251c99d44103, type: 3}
     weight: 1
     scale:
-      Min: 0.85
-      Max: 1.25
+      Min: 1.5
+      Max: 2.5
     yaw:
       Min: 0
       Max: 360
@@ -155,8 +155,8 @@ MonoBehaviour:
   - prefab: {fileID: 7627143706338982486, guid: 98fdfeac5f4e54d2489d04bc245916b3, type: 3}
     weight: 1
     scale:
-      Min: 0.85
-      Max: 1.25
+      Min: 1.5
+      Max: 2.5
     yaw:
       Min: 0
       Max: 360
@@ -169,8 +169,8 @@ MonoBehaviour:
   - prefab: {fileID: 435741357148229692, guid: 5ad55476a262547c4891b5b54fba4b24, type: 3}
     weight: 1
     scale:
-      Min: 0.85
-      Max: 1.25
+      Min: 1.5
+      Max: 2.5
     yaw:
       Min: 0
       Max: 360

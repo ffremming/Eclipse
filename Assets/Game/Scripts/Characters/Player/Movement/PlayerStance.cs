@@ -159,6 +159,15 @@ namespace SpaceGame.Characters
             // that is the only direction the test can refuse.
             if (!wantsCrouch && isCrouching && driving && !HasHeadroom()) wantsCrouch = true;
 
+            // Dropping into a crouch out of a sprint is a slide. It has to be taken HERE, on the
+            // frame the crouch goes down and while isSprinting is still true, because UpdateSprint
+            // below cancels the sprint for exactly this input — so a slide decided any later in
+            // the frame, or from the dash button, can never see the two together.
+            if (wantsCrouch && !isCrouching && isSprinting && movement != null)
+            {
+                movement.PlayDodge(DodgeMove.Slide);
+            }
+
             isCrouching = wantsCrouch;
 
             UpdateSprint(driving);

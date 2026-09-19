@@ -36,13 +36,23 @@ namespace SpaceGame.EditorTools
             new Preset("Foliage/RockFormation", "RockFormations", VegetationDistribution.Scatter, count: 90, minDistance: 16f,
                        scaleMin: 1.5f, scaleMax: 3.2f),
             new Preset("Foliage/Stump", "Stumps", VegetationDistribution.Scatter, count: 25, minDistance: 10f),
-            new Preset("Foliage/Fern", "Ferns", VegetationDistribution.Patch, patchSize: 14f, coverage: 0.25f, spacing: 6f),
-            new Preset("Foliage/Mushroom", "Mushrooms", VegetationDistribution.Patch, patchSize: 8f, coverage: 0.06f, spacing: 8f),
-            new Preset("Foliage/GroundCover", "GroundCover", VegetationDistribution.Patch, patchSize: 14f, coverage: 0.3f, spacing: 4.5f),
-            new Preset("LowPolyWind", "TallGrass", VegetationDistribution.Patch, patchSize: 22f, coverage: 0.55f, spacing: 2.6f,
-                       nameContains: "Tall", scaleMin: 1.3f, scaleMax: 2.4f),
+            // Undergrowth is grown to hide in: big, in wide patches with open lanes between them,
+            // so the island alternates thickets to disappear into with open ground to fight on.
+            // Bracken only: the folder's other ferns were dropped for it, and the coverage goes up
+            // so it is the undergrowth rather than one kind among three.
+            new Preset("Foliage/Fern", "Ferns", VegetationDistribution.Patch, patchSize: 26f, coverage: 0.4f, spacing: 2.6f,
+                       nameContains: "Bracken", scaleMin: 1.8f, scaleMax: 3f),
+            new Preset("Foliage/Mushroom", "Mushrooms", VegetationDistribution.Patch, patchSize: 16f, coverage: 0.14f, spacing: 2.5f,
+                       scaleMin: 2f, scaleMax: 4f),
+            new Preset("Foliage/GroundCover", "GroundCover", VegetationDistribution.Patch, patchSize: 20f, coverage: 0.35f, spacing: 3.5f,
+                       scaleMin: 1.5f, scaleMax: 2.5f),
+            // The wind pack's blades are 40-50 cm, so this stands 1.2-2.2 m: over a goblin's head.
+            new Preset("LowPolyWind", "TallGrass", VegetationDistribution.Patch, patchSize: 40f, coverage: 0.35f, spacing: 2.4f,
+                       nameContains: "Tall", scaleMin: 3f, scaleMax: 4.5f),
+            // The 6.5 m A1 is the stand's main tree, with the 11 m and 9 m C1s left as the odd tall one.
             new Preset("DistantTrees", "TreeClusters", VegetationDistribution.Cluster,
-                       minDistance: 4.5f, clusterCount: 80, clusterRadius: 24f, perCluster: 30),
+                       minDistance: 4.5f, clusterCount: 80, clusterRadius: 24f, perCluster: 30,
+                       weights: new[] { ("Tree_A1_6.5m", 2.5f), ("Tree_C1", 0.25f) }),
             new Preset("LowPolyWind", "Boulders", VegetationDistribution.Scatter, count: 30, minDistance: 11f,
                        nameContains: "Rock"),
         };
@@ -100,7 +110,7 @@ namespace SpaceGame.EditorTools
             {
                 SerializedProperty item = items.GetArrayElementAtIndex(index);
                 item.FindPropertyRelative("prefab").objectReferenceValue = prefabs[index];
-                item.FindPropertyRelative("weight").floatValue = 1f;
+                item.FindPropertyRelative("weight").floatValue = preset.WeightOf(prefabs[index].name);
                 Range(item, "scale", preset.ScaleMin, preset.ScaleMax);
                 Range(item, "yaw", 0f, 360f);
                 Range(item, "tilt", 0f, preset.Mode == VegetationDistribution.Scatter ? 4f : 10f);
@@ -143,8 +153,10 @@ namespace SpaceGame.EditorTools
                           float patchSize = 0f, float coverage = 0f, float spacing = 0f,
                           string nameContains = null,
                           int clusterCount = 0, float clusterRadius = 20f, int perCluster = 0,
-                          float scaleMin = 0.85f, float scaleMax = 1.25f)
+                          float scaleMin = 0.85f, float scaleMax = 1.25f,
+                          (string NameContains, float Weight)[] weights = null)
             {
+                Weights = weights ?? System.Array.Empty<(string NameContains, float Weight)>();
                 NameContains = nameContains;
                 ClusterCount = clusterCount;
                 ClusterRadius = clusterRadius;
@@ -175,6 +187,22 @@ namespace SpaceGame.EditorTools
             public int ClusterCount { get; }
             public float ClusterRadius { get; }
             public int PerCluster { get; }
+
+            /// <summary>
+            /// How often prefabs turn up against the rest of the layer, by a piece of their name. A
+            /// prefab none of these match has weight 1.
+            /// </summary>
+            private (string NameContains, float Weight)[] Weights { get; }
+
+            public float WeightOf(string prefabName)
+            {
+                foreach ((string nameContains, float weight) in Weights)
+                {
+                    if (prefabName.Contains(nameContains)) return weight;
+                }
+
+                return 1f;
+            }
 
             /// <summary>Size range on the prefab, which is already at its life size.</summary>
             public float ScaleMin { get; }

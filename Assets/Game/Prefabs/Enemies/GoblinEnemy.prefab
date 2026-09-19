@@ -147,8 +147,6 @@ MonoBehaviour:
   hittable:
     serializedVersion: 2
     m_Bits: 4294967295
-  swingSound: 208
-  impactSound: 209
 --- !u!114 &8022456537932226332
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -163,7 +161,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Enemies.EnemyAnimator
   animator: {fileID: 0}
   health: {fileID: 0}
-  swingVariations: 3
+  swingVariations: 5
   damping: 0.12
 --- !u!114 &979792718938649541
 MonoBehaviour:
@@ -186,6 +184,8 @@ MonoBehaviour:
     m_Bits: 1
   sightInterval: 0.2
   shoutRadius: 14
+  walkSpeed: 3.5
+  chaseSpeed: 3.5
   attackRange: 2.2
   attackCooldown: 1.4
   leashRadius: 30

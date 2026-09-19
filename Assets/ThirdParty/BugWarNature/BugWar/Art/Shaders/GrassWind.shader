@@ -109,11 +109,15 @@ Shader "BugWar/GrassWind"
                 half3 diffuse = albedo * light.color * wrap * atten;
 
                 // Transmission. Strongest looking into the sun through the blade, and strongest at
-                // the tip where the blade is thinnest.
+                // the tip where the blade is thinnest. Shadow and distance are applied separately:
+                // the _TransShadow floor is there so a shadowed blade still glows a little, and
+                // folding distance falloff into the same lerp made that floor ignore distance, so
+                // any point light's whole intensity landed on every blade inside its range.
                 half back = pow(saturate(dot(-V, -L)), _TransPower);
                 half thickness = lerp(0.25, 1.0, heightFraction);
                 half3 trans = _TransColor.rgb * light.color * back * thickness * _TransStrength
-                            * lerp(_TransShadow, 1.0, atten);
+                            * lerp(_TransShadow, 1.0, light.shadowAttenuation)
+                            * light.distanceAttenuation;
 
                 return diffuse + trans;
             }

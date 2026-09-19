@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using SpaceGame.Gameplay;
 
@@ -64,14 +65,34 @@ namespace SpaceGame.Items
         [Tooltip("Layers the sweep can hit.")]
         [SerializeField] private LayerMask hitMask = ~0;
 
+        /// <summary>The most colliders one sweep can hurt. A crowd larger than this is not one blow.</summary>
+        private const int MaxHitsPerSweep = 32;
+
+        private readonly Collider[] hitBuffer = new Collider[MaxHitsPerSweep];
         private float swingT = -1f;
         private MaterialPropertyBlock block;
+        private SpaceGame.Characters.PlayerMeleeSwing holderSwing;
+
+        /// <summary>How long one swing takes, in seconds. A weapon with its own motion fits it to this.</summary>
+        protected float SwingDuration => swingDuration;
 
         /// <summary>0 while idle, 0..1 through a swing. Subclasses read it to shape their own motion.</summary>
         protected float SwingProgress => swingT < 0f ? 0f : Mathf.Clamp01(swingT / Mathf.Max(swingDuration, 1e-4f));
 
         /// <summary>True between the start of a swing and the end of it.</summary>
         protected bool Swinging => swingT >= 0f;
+
+        /// <summary>The light at the business end, for subclasses that have to report where it is.</summary>
+        protected Light TipLight => tipLight;
+
+        /// <summary>
+        /// How hard the weapon is burning right now, 0 idle to 1 at the peak of a swing.
+        /// <para>
+        /// The same curve that drives the light, exposed so a subclass can drive its own effects
+        /// from it instead of timing a second one that would drift out of step with the first.
+        /// </para>
+        /// </summary>
+        protected float Flare { get; private set; }
 
         /// <summary>Where the damage sweep is centred and how far it reaches.</summary>
         protected abstract void GetSweep(out Vector3 centre, out float radius);
@@ -80,22 +101,47 @@ namespace SpaceGame.Items
         {
             base.OnEquipped(holder);
             block = new MaterialPropertyBlock();
+
+            // The holder's swing, not the item's own animator. Resolved on equip because it cannot
+            // change while the weapon is in a hand, and searching for it per swing would pay for
+            // that on every press.
+            holderSwing = holder != null ? holder.GetComponent<SpaceGame.Characters.PlayerMeleeSwing>() : null;
+
             ApplyLight(0f);
             if (trail != null) trail.emitting = false;
         }
 
         /// <summary>The hit. One sweep per press, at the moment of the press.</summary>
-        protected override void Use()
+        protected override void Use() => SweepForHits();
+
+        /// <summary>
+        /// Hurt everything inside the sweep <see cref="GetSweep"/> reports right now.
+        /// <para>
+        /// A weapon whose damage lands at the press calls it once, from <see cref="Use"/>. One whose
+        /// damage travels — the whip's orb, over the length of a lash — calls it every step and
+        /// passes <paramref name="alreadyHit"/>, so a target the orb stays inside for several steps
+        /// is hurt once.
+        /// </para>
+        /// </summary>
+        protected void SweepForHits(HashSet<Component> alreadyHit = null)
         {
             GetSweep(out Vector3 centre, out float radius);
 
             // OverlapSphere rather than a swept cast: the swing is an arc, and approximating an arc
             // with a line misses everything at the sides, which is exactly where a wide weapon is
             // supposed to connect.
-            Collider[] hits = Physics.OverlapSphere(centre, radius, hitMask, QueryTriggerInteraction.Ignore);
-            foreach (Collider hit in hits)
+            int count = Physics.OverlapSphereNonAlloc(centre, radius, hitBuffer, hitMask,
+                                                      QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
             {
+                Collider hit = hitBuffer[i];
                 if (owner != null && hit.transform.IsChildOf(owner.transform)) continue;
+
+                // A target is whatever owns the health, and a creature is many colliders. Keyed on
+                // the collider instead, a limb and then a torso would be two hits on one goblin.
+                Component victim = hit.GetComponentInParent<HealthComponent>();
+                if (alreadyHit != null && !alreadyHit.Add(victim != null ? victim : hit)) continue;
+
                 Damage.Apply(hit.gameObject, damage, transform);
             }
         }
@@ -104,6 +150,13 @@ namespace SpaceGame.Items
         protected override void Present()
         {
             swingT = 0f;
+
+            // The holder swings its own body. Going through PlayerMeleeSwing rather than writing
+            // to the Animator here means the weapon shares the bare hand's cooldown and its
+            // variation counter, so swapping between them never repeats a clip for no visible
+            // reason. It plays the animation only — the damage is this weapon's own sweep.
+            if (holderSwing != null) holderSwing.TryPlaySwing();
+
             if (trail != null)
             {
                 // Cleared rather than left to fade, so a second swing starts its own arc instead of
@@ -125,10 +178,14 @@ namespace SpaceGame.Items
                 }
             }
 
-            float flare = swingT < 0f ? 0f : swingCurve.Evaluate(SwingProgress);
-            ApplyLight(flare);
-            ApplyTrail(flare);
+            Flare = swingT < 0f ? 0f : swingCurve.Evaluate(SwingProgress);
+            ApplyLight(Flare);
+            ApplyTrail(Flare);
+            OnFlareChanged(Flare);
         }
+
+        /// <summary>Hook for subclasses with effects of their own to drive. Default does nothing.</summary>
+        protected virtual void OnFlareChanged(float flare) { }
 
         private void ApplyLight(float flare)
         {

@@ -17,6 +17,9 @@ namespace SpaceGame.Enemies
         /// <summary>False means stand still — mid-swing, or idling between strolls.</summary>
         public bool HasDestination;
 
+        /// <summary>How fast to get there, in metres per second. Meaningless without a destination.</summary>
+        public float Speed;
+
         /// <summary>Turn to look at the target. Used while attacking, when navigation is not steering.</summary>
         public bool FaceTarget;
 

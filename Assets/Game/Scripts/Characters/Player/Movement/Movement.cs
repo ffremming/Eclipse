@@ -42,14 +42,36 @@ namespace SpaceGame.Characters
         [Header("Animation matching")]
         [Tooltip("Ground speed the Move tree's run clip was authored to travel at. Above this " +
                  "the whole cycle is played proportionally faster, so a sprint puts down more " +
-                 "steps instead of skating on the same ones.")]
-        [SerializeField] private float runClipSpeed = 7.2f;
+                 "steps instead of skating on the same ones. Measured from the clip's stride, so " +
+                 "it must match the run anchor in the Move tree.")]
+        [SerializeField] private float runClipSpeed = 4.92f;
 
         [Tooltip("The same figure for the Crouch tree's walk clip.")]
-        [SerializeField] private float crouchClipSpeed = 1.6f;
+        [SerializeField] private float crouchClipSpeed = 1.29f;
 
         [Header("Dash")]
-        [SerializeField] private float dashSpeed = 10f;
+        [Tooltip("Launch speed of a plain sidestep or backstep. The evasive clips play in place " +
+                 "and this is what actually moves the body, so raising it past what the clip's " +
+                 "own stride covers is what makes a dodge look like it is on ice.")]
+        [SerializeField] private float dashSpeed = 6f;
+
+        [Tooltip("Launch speed of a sprinting roll. Faster than a dodge because the roll is " +
+                 "spending momentum the player already had.")]
+        [SerializeField] private float rollSpeed = 9f;
+
+        [Tooltip("Floor under a slide's launch speed. A slide entered from a faster sprint keeps " +
+                 "the sprint's speed instead, so sliding can never be a way of slowing down.")]
+        [SerializeField] private float slideSpeed = 11f;
+
+        [Tooltip("How long a slide holds its own speed before ordinary crouch movement takes " +
+                 "over. The ground lerp is suppressed for this whole window, which is what stops " +
+                 "crouchSpeed from erasing the slide on the next physics tick.")]
+        [SerializeField] private float slideDuration = 0.8f;
+
+        [Tooltip("How far back the stick must be held for a dash to become a backstep rather " +
+                 "than a sidestep.")]
+        [SerializeField] private float dodgeBackThreshold = 0.5f;
+
         [SerializeField] private GameObject playerCamera;
 
         [SerializeField] private Rigidbody rb;
@@ -219,6 +241,14 @@ namespace SpaceGame.Characters
             {
                 newHorizontal = SteerTether(currentHorizontal, move);
             }
+            else if (IsSliding && grounded)
+            {
+                // The grounded lerp below is a hard set, not an ease: with control at 1 it replaces
+                // the velocity outright with crouchSpeed, which erased the slide one tick after it
+                // started. A slide steers its own speed until its window is up.
+                newHorizontal = slideDirection * SlideDecay.SpeedAt(
+                    Time.time - slideStartTime, slideLaunchSpeed, crouchSpeed, slideDuration);
+            }
             else
             {
                 float control = grounded ? 1f : airControl;
@@ -244,6 +274,17 @@ namespace SpaceGame.Characters
         /// "Lands" is stricter than the ground probe — see <see cref="SteerWithoutBraking"/>.
         /// </summary>
         private bool carryingMomentum;
+
+        /// <summary>
+        /// The live slide. Deliberately not reusing <see cref="carryingMomentum"/>: that one ends
+        /// the moment the body is grounded and not rising, which is every frame of a ground slide.
+        /// </summary>
+        private float slideStartTime = float.NegativeInfinity;
+        private float slideLaunchSpeed;
+        private Vector3 slideDirection;
+
+        /// <summary>Whether a slide is still inside its window and steering its own speed.</summary>
+        public bool IsSliding => Time.time - slideStartTime < slideDuration;
 
         /// <summary>
         /// Keep whatever horizontal speed the body has until it lands.
@@ -449,15 +490,10 @@ namespace SpaceGame.Characters
             Vector3 localVelocity = transform.worldToLocalMatrix.MultiplyVector(velocity);
             bool crouching = stance != null && stance.IsCrouching;
 
-            // SpeedX/SpeedY feed two blend trees that were authored in different units. The
-            // standing Move tree places its clips at the ground speed each one travels at — walk
-            // at 4, run at 7.2 — so it wants metres per second. The Crouch tree places its four
-            // clips on a unit square, so it wants a direction. Handing both the same number is
-            // what pins the crouch blend to full stride the instant the player nudges the stick.
-            float blendScale = crouching ? 1f / Mathf.Max(0.01f, crouchSpeed) : 1f;
-
-            animator.SetFloat("SpeedX", localVelocity.x * blendScale, .1f, Time.deltaTime);
-            animator.SetFloat("SpeedY", localVelocity.z * blendScale, .1f, Time.deltaTime);
+            // Both blend trees anchor each clip at the ground speed that clip's stride actually
+            // covers, so both read SpeedX/SpeedY as metres per second and neither needs scaling.
+            animator.SetFloat("SpeedX", localVelocity.x, .1f, Time.deltaTime);
+            animator.SetFloat("SpeedY", localVelocity.z, .1f, Time.deltaTime);
             animator.SetFloat("FallSpeed", velocity.y, .1f, Time.deltaTime);
             animator.SetFloat("MoveAnimSpeed", StrideRate(localVelocity, crouching));
             animator.SetBool("IsGrounded", grounded);
@@ -525,10 +561,25 @@ namespace SpaceGame.Characters
                 rb.AddForce(Vector3.up * jumpForce, ForceMode.VelocityChange);
                 jumpOnCooldown = true;
 
+                // A jump out of a sprint becomes a flip. Nothing about the physics changes — the
+                // extra height a salto looks like it should have is already in the sprint's
+                // forward speed, and giving it real extra lift would make the agile option also
+                // the strictly better one.
+                if (animator && animator.runtimeAnimatorController != null
+                    && stance != null && stance.IsSprinting)
+                {
+                    animator.SetTrigger("Salto");
+                }
+
                 OnJumped?.Invoke();
             }
         }
 
+        /// <summary>
+        /// One button, four evasive moves: what comes out is read off what the player is already
+        /// doing, which <see cref="DodgeSelector"/> decides. The clips play in place, so the
+        /// displacement below is the whole of the movement.
+        /// </summary>
         public void OnDash()
         {
             if (rb == null || !isActiveAndEnabled || rb.isKinematic)
@@ -536,20 +587,71 @@ namespace SpaceGame.Characters
                 return;
             }
 
-            Vector3 dashDirection = transform.forward;
-            if (playerCamera)
-            {
-                dashDirection = playerCamera.transform.forward;
-            }
-
-            dashDirection.y = 0f;
-            dashDirection.Normalize();
-
-            Vector3 velocity = rb.linearVelocity;
-            velocity = dashDirection * dashSpeed + Vector3.up * velocity.y;
-            rb.linearVelocity = velocity;
+            bool sprinting = stance != null && stance.IsSprinting;
+            PlayDodge(DodgeSelector.Choose(moveInput, sprinting, dodgeBackThreshold));
 
             OnDashed?.Invoke();
+        }
+
+        /// <summary>
+        /// Launch one evasive move: the clip plays in place, so this displacement is the whole of
+        /// the movement. Public because the slide is taken off the crouch press rather than the
+        /// dash — see <see cref="DodgeSelector"/> for why it cannot be decided with the others.
+        /// </summary>
+        public void PlayDodge(DodgeMove dodge)
+        {
+            if (rb == null || !isActiveAndEnabled || rb.isKinematic) return;
+
+            Vector3 velocity = rb.linearVelocity;
+            Vector3 direction = DodgeDirection(dodge);
+
+            float speed = dodge switch
+            {
+                DodgeMove.Roll => rollSpeed,
+                DodgeMove.Slide => slideSpeed,
+                _ => dashSpeed,
+            };
+
+            if (dodge == DodgeMove.Slide)
+            {
+                // Whichever is faster: the sprint that earned the slide, or the slide's own floor.
+                float carried = new Vector3(velocity.x, 0f, velocity.z).magnitude;
+                slideLaunchSpeed = Mathf.Max(carried, slideSpeed);
+                slideDirection = direction;
+                slideStartTime = Time.time;
+                speed = slideLaunchSpeed;
+            }
+
+            rb.linearVelocity = direction * speed + Vector3.up * velocity.y;
+
+            if (animator && animator.runtimeAnimatorController != null)
+            {
+                animator.SetInteger("DodgeIndex", (int)dodge);
+                animator.SetTrigger("Dodge");
+            }
+        }
+
+        /// <summary>
+        /// Where a dodge goes. The stick wins when the player is pushing one, so a dodge is aimed
+        /// rather than always forward; with no input it falls back to where they are looking, which
+        /// is what the dash did before there were four of these.
+        /// </summary>
+        private Vector3 DodgeDirection(DodgeMove dodge)
+        {
+            Vector3 facing = playerCamera ? playerCamera.transform.forward : transform.forward;
+            facing.y = 0f;
+            facing.Normalize();
+
+            if (dodge == DodgeMove.DodgeBack) return -facing;
+
+            if (moveInput.sqrMagnitude > 0.01f)
+            {
+                Vector3 aimed = transform.right * moveInput.x + transform.forward * moveInput.y;
+                aimed.y = 0f;
+                if (aimed.sqrMagnitude > 1e-6f) return aimed.normalized;
+            }
+
+            return facing;
         }
 
         public void DisableGroundSnap(float duration = 0.2f)

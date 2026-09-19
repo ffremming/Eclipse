@@ -21,10 +21,18 @@ namespace SpaceGame.Characters
     {
         private static readonly int AttackTrigger = Animator.StringToHash("Attack");
         private static readonly int AttackIndex = Animator.StringToHash("AttackIndex");
+        private static readonly int KickTrigger = Animator.StringToHash("Kick");
+        private static readonly int JumpAttackTrigger = Animator.StringToHash("JumpAttack");
 
         [SerializeField] private Animator animator;
         [SerializeField] private EquipmentController equipment;
         [SerializeField] private HealthComponent health;
+
+        [Tooltip("Read for the two contextual attacks: a swing in the air becomes the jump " +
+                 "attack, a swing from a crouch becomes the kick. Left empty, the player only " +
+                 "ever gets the standing swings.")]
+        [SerializeField] private PlayerMovement movement;
+        [SerializeField] private PlayerStance stance;
 
         [Tooltip("What the swing hits. Leave empty and the player swings for show, as it did before " +
                  "there was a hitbox — which is worth knowing if melee suddenly stops hurting.")]
@@ -32,12 +40,17 @@ namespace SpaceGame.Characters
 
         [Tooltip("How many swing clips the Attack layer cycles through. Must match the number of " +
                  "swing states in the controller, which the AttackIndex parameter selects between.")]
-        [SerializeField] private int swingVariations = 3;
+        [SerializeField] private int swingVariations = 5;
 
         [Tooltip("Shortest gap between swings, in seconds. Shorter than the clip on purpose: the " +
                  "next swing cuts into the follow-through of the last one rather than waiting " +
                  "for it, which is what keeps a held button from feeling sluggish.")]
         [SerializeField] private float swingCooldown = 0.35f;
+
+        [Tooltip("Longest gap that still continues the combo. Press again inside this and the " +
+                 "chain escalates towards the finisher; let it lapse and the next swing opens a " +
+                 "fresh chain. Must be longer than the cooldown or the chain can never advance.")]
+        [SerializeField] private float chainWindow = 1.1f;
 
         private PlayerInputManager input;
         private MeleeSwingSequence sequence;
@@ -49,8 +62,10 @@ namespace SpaceGame.Characters
             if (equipment == null) equipment = GetComponent<EquipmentController>();
             if (health == null) health = GetComponent<HealthComponent>();
             if (strike == null) strike = GetComponent<MeleeStrike>();
+            if (movement == null) movement = GetComponent<PlayerMovement>();
+            if (stance == null) stance = GetComponent<PlayerStance>();
 
-            sequence = new MeleeSwingSequence(swingVariations, swingCooldown);
+            sequence = new MeleeSwingSequence(swingVariations, swingCooldown, chainWindow);
         }
 
         private void OnEnable()
@@ -66,19 +81,55 @@ namespace SpaceGame.Characters
         private void OnUsePressed()
         {
             // The held item's own use already ran; swinging as well would play a sword animation
-            // over a thrown grenade.
+            // over a thrown grenade. A melee weapon is the exception and asks for the swing itself,
+            // through TryPlaySwing — see LightWeapon.
             if (equipment != null && equipment.HeldUsable != null) return;
-            if (health != null && !health.Alive) return;
-            if (animator == null || animator.runtimeAnimatorController == null) return;
-
-            if (!sequence.TrySwing(Time.time, out int index)) return;
-
-            animator.SetInteger(AttackIndex, index);
-            animator.SetTrigger(AttackTrigger);
+            if (!TryPlaySwing()) return;
 
             // After the animator, so that a swing always looks like it happened even if the hitbox
             // is missing from the prefab.
             if (strike != null) strike.Swing();
+        }
+
+        /// <summary>
+        /// Play a swing clip, if the sequence allows one right now.
+        /// <para>
+        /// Public because a held melee weapon has to swing the same body this does, and it must do
+        /// it through the same <see cref="MeleeSwingSequence"/> — otherwise the weapon and the bare
+        /// hand keep separate cooldowns and separate variation counters, and a player swapping
+        /// between them sees the same clip twice in a row for no reason they can see.
+        /// </para>
+        /// <para>
+        /// Only the animation. The weapon resolves its own hit through its own sweep, so this does
+        /// NOT fire <see cref="MeleeStrike"/> — calling both would hurt everything in front of the
+        /// player twice per press.
+        /// </para>
+        /// </summary>
+        public bool TryPlaySwing()
+        {
+            if (health != null && !health.Alive) return false;
+            if (animator == null || animator.runtimeAnimatorController == null) return false;
+
+            // Gated through the sequence even when the swing that comes out is contextual, so the
+            // kick and the jump attack share one cooldown with the sword rather than giving the
+            // player a second attack button by accident.
+            if (!sequence.TrySwing(Time.time, out int index)) return false;
+
+            if (movement != null && !movement.IsOnGround)
+            {
+                animator.SetTrigger(JumpAttackTrigger);
+                return true;
+            }
+
+            if (stance != null && stance.IsCrouching)
+            {
+                animator.SetTrigger(KickTrigger);
+                return true;
+            }
+
+            animator.SetInteger(AttackIndex, index);
+            animator.SetTrigger(AttackTrigger);
+            return true;
         }
     }
 }

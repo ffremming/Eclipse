@@ -33,6 +33,9 @@ namespace SpaceGame.EditorTools
         /// <summary>World height of the sea, and so of the beach the planting keeps off.</summary>
         private const float SeaLevel = 7f;
 
+        /// <summary>Lowest world height anything is planted at: above the sea and its beach.</summary>
+        private const float PlantingFloor = SeaLevel + 1.5f;
+
         /// <summary>Slope, in degrees, above which the terrain shows bare rock.</summary>
         private const float RockSlope = 32f;
 
@@ -57,7 +60,7 @@ namespace SpaceGame.EditorTools
             VegetationField field = BuildField(terrain);
             AtmosphereSetup.Build(sun);
 
-            TerrainGrassDetail.Paint(terrain, SeaLevel + 1.5f, Seed);
+            TerrainGrassDetail.Paint(terrain, PlantingFloor, Seed);
 
             Directory.CreateDirectory(Path.GetDirectoryName(ScenePath));
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -66,6 +69,27 @@ namespace SpaceGame.EditorTools
             AddToBuildSettings();
 
             Debug.Log("[NatureWorld] Built " + ScenePath);
+        }
+
+        /// <summary>
+        /// Paints the open scene's terrain grass again with the numbers in <see cref="TerrainGrassDetail"/>,
+        /// leaving everything else in the scene as it is. <see cref="Build"/> is the only other way to
+        /// reach it, and that replaces the whole scene, hand edits and all.
+        /// </summary>
+        [MenuItem("Tools/Eclipse/World/Repaint Terrain Grass")]
+        private static void RepaintGrass()
+        {
+            Terrain terrain = Terrain.activeTerrain;
+            if (terrain == null)
+            {
+                Debug.LogWarning("[NatureWorld] No terrain in the open scene.");
+                return;
+            }
+
+            TerrainGrassDetail.Paint(terrain, PlantingFloor, Seed);
+            AssetDatabase.SaveAssets();
+            EditorSceneManager.MarkSceneDirty(terrain.gameObject.scene);
+            Debug.Log("[NatureWorld] Repainted the terrain grass.");
         }
 
         /// <summary>The island: heightmap, ground layers and the splat map that paints them.</summary>
@@ -175,7 +199,7 @@ namespace SpaceGame.EditorTools
             serialized.FindProperty("seed").intValue = Seed;
             serialized.FindProperty("groundMask").intValue = 1 << terrain.gameObject.layer;
             serialized.FindProperty("rayHeight").floatValue = HeightMetres * 2f;
-            serialized.FindProperty("minAltitude").floatValue = SeaLevel + 1.5f;
+            serialized.FindProperty("minAltitude").floatValue = PlantingFloor;
             serialized.FindProperty("maxSlope").floatValue = RockSlope;
             serialized.FindProperty("alignToGround").floatValue = 0.4f;
 

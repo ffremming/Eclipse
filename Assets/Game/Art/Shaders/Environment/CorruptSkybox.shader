@@ -18,6 +18,13 @@
 // way, which is the feeling wanted, while leaving the player's own light the only light that
 // actually falls on anything.
 //
+// Under the pall hang real clouds: a ray-marched slab of dark, heavy volume. They are dark because
+// the only light in this sky is the eclipse, and the eclipse gives almost none — so a cloud is a
+// black mass that catches red in exactly two places. Its underside, which takes the eclipse's
+// bruised undertone, and its sunward edge, where light escaping past the occluder rims it in the
+// corona's colour. Everything else stays ash. The lighting goes through the same posterise as the
+// rest of the sky, so the volume reads as cut-paper shapes rather than as a photographed cloud.
+//
 // The palette is deliberately almost colourless — ash greys pulled slightly green and slightly
 // violet, nothing saturated anywhere. That is what leaves the player's white-orange-turquoise
 // light as the only saturated thing on screen, so the eye goes to it and nowhere else. Draining
@@ -58,9 +65,27 @@ Shader "SpaceGame/CorruptSkybox"
         _PallSpeed    ("Pall Drift",             Range(0, 0.2))   = 0.006
         _PallStrength ("Pall Strength",          Range(0, 1))     = 0.7
 
+        [Header(Clouds  a dark volume lit red by the eclipse)]
+        _CloudBaseHeight ("Base Height (sky units)",  Range(0.1, 4))   = 0.8
+        _CloudThickness  ("Thickness",                Range(0.05, 3))  = 0.6
+        _CloudScale      ("Scale (higher = smaller)", Range(0.2, 6))   = 2.2
+        _CloudCoverage   ("Coverage",                 Range(0, 1))     = 0.5
+        _CloudErosion    ("Erosion (ragged edges)",   Range(0, 1))     = 0.35
+        _CloudEdge       ("Edge Softness",            Range(0.01, 0.6)) = 0.05
+        _CloudExtinction ("Density (opacity)",        Range(0.5, 40))  = 24
+        _CloudSpeed      ("Drift",                    Range(0, 0.2))   = 0.012
+        _CloudSteps      ("March Steps (cost)",       Range(4, 48))    = 24
+        _CloudLightReach ("Self-shadow Reach (frac of thickness)", Range(0.02, 1)) = 0.3
+        _CloudBodyColor  ("Body (ash)",               Color) = (0.040, 0.034, 0.038, 1)
+        _CloudUndertone  ("Undertone (eclipse red)",  Color) = (0.24, 0.030, 0.022, 1)
+        _CloudUndertoneStrength ("Undertone Strength", Range(0, 3))    = 0.7
+        _CloudRimStrength ("Rim Strength",            Range(0, 6))     = 1.2
+        _CloudRimFocus   ("Rim Focus (higher = tighter to the eclipse)", Range(1, 16)) = 4
+        _CloudHorizonFade ("Horizon Fade (elevation)", Range(0.02, 0.6)) = 0.3
+
         [Header(Stylisation)]
-        _Bands        ("Posterise Bands (0 = off)", Range(0, 32)) = 12
-        _BandSoftness ("Band Softness",          Range(0, 1))     = 0.35
+        _Bands       ("Posterise Bands (0 = off)", Range(0, 32)) = 6
+        _BandSoftness ("Band Softness",          Range(0, 3))     = 0.35
     }
 
     SubShader
@@ -117,6 +142,22 @@ Shader "SpaceGame/CorruptSkybox"
                 float  _PallScale;
                 float  _PallSpeed;
                 float  _PallStrength;
+                float  _CloudBaseHeight;
+                float  _CloudThickness;
+                float  _CloudScale;
+                float  _CloudCoverage;
+                float  _CloudErosion;
+                float  _CloudEdge;
+                float  _CloudExtinction;
+                float  _CloudSpeed;
+                float  _CloudSteps;
+                float  _CloudLightReach;
+                float4 _CloudBodyColor;
+                float4 _CloudUndertone;
+                float  _CloudUndertoneStrength;
+                float  _CloudRimStrength;
+                float  _CloudRimFocus;
+                float  _CloudHorizonFade;
                 float  _Bands;
                 float  _BandSoftness;
             CBUFFER_END
@@ -148,6 +189,100 @@ Shader "SpaceGame/CorruptSkybox"
                 float frac0 = scaled - index;
                 float stepped = index + smoothstep(0.5 - softness * 0.5, 0.5 + softness * 0.5, frac0);
                 return saturate(stepped / bands);
+            }
+
+            // The cumulus profile: a flat base that rises to a rounded crown. Heights are fractions
+            // of the slab, so these stay right however thick the layer is tuned.
+            static const float CLOUD_BASE_FLATNESS = 0.15;
+            static const float CLOUD_CROWN_START   = 0.5;
+
+            // Transmittance below which a ray is as good as absorbed and the march stops.
+            static const float CLOUD_OPAQUE = 0.02;
+
+            /// Density of the cloud slab at a point in sky space, 0..1.
+            ///
+            /// Two octaves of value noise, the second eating into the first for ragged edges, then
+            /// cut against a coverage threshold with a narrow smoothstep. The narrow cut is the
+            /// stylisation: a wide one gives soft photographic cloud, a narrow one gives a crisp
+            /// silhouette with a puffed, sculpted body. Points outside the slab clamp to a height
+            /// fraction whose profile is zero, so the layer needs no separate bounds test.
+            float CloudDensity(float3 p)
+            {
+                float heightFrac = saturate((p.y - _CloudBaseHeight) / _CloudThickness);
+                float profile = smoothstep(0.0, CLOUD_BASE_FLATNESS, heightFrac)
+                              * (1.0 - smoothstep(CLOUD_CROWN_START, 1.0, heightFrac));
+
+                float3 q = p * _CloudScale + float3(_Time.y * _CloudSpeed, 0.0, 0.0);
+                float body = LightNoise(q);
+                float detail = LightNoise(q * 2.7 + 17.3);
+                float shape = lerp(body, detail, _CloudErosion) * profile;
+
+                float threshold = 1.0 - _CloudCoverage;
+                return smoothstep(threshold, threshold + _CloudEdge, shape);
+            }
+
+            /// Marches the cloud slab front to back along a sky direction.
+            ///
+            /// Returns the light gathered in rgb and the transmittance left over in a, so the caller
+            /// composites it over whatever sky is behind: sky * a + rgb.
+            ///
+            /// Lighting is one extra density tap towards the eclipse. If there is more cloud between
+            /// this sample and the eclipse than at the sample itself, the sample is in shadow; if
+            /// there is less, it is on the sunward edge and catches the rim. One tap instead of a
+            /// march per sample is what keeps this affordable across a whole sky, and the result is
+            /// posterised anyway so a cleaner answer would only be thrown away.
+            float4 MarchClouds(float3 dir, float3 sunDir, float2 pixel)
+            {
+                // Planar slab, so the ray's distance to a height is height / dir.y. The floor keeps
+                // the division finite; the caller has already faded the layer out by then.
+                float dirY = max(dir.y, 1e-2);
+                float tNear = _CloudBaseHeight / dirY;
+                float tFar = (_CloudBaseHeight + _CloudThickness) / dirY;
+
+                int steps = max((int)_CloudSteps, 1);
+                float stepLen = (tFar - tNear) / steps;
+
+                // Start each ray a random fraction of a step in, so the slices of the march do not
+                // line up into visible layers across neighbouring pixels.
+                float t = tNear + stepLen * LightHash(float3(pixel, 0.0));
+
+                float lightStep = _CloudThickness * _CloudLightReach;
+                float sunward = pow(saturate(dot(dir, sunDir)), _CloudRimFocus);
+
+                float3 light = 0.0;
+                float transmittance = 1.0;
+
+                [loop]
+                for (int i = 0; i < steps; i++)
+                {
+                    float3 p = dir * t;
+                    float density = CloudDensity(p);
+
+                    if (density > 0.0)
+                    {
+                        float towardEclipse = CloudDensity(p + sunDir * lightStep);
+                        float lit = Posterise(saturate(density - towardEclipse), _Bands * 0.5, _BandSoftness);
+
+                        // 0 at the crown, 1 at the base: the undertone pools underneath, where the
+                        // cloud is looking up at the eclipse's red bleed rather than at the sky.
+                        float heightFrac = saturate((p.y - _CloudBaseHeight) / _CloudThickness);
+                        float underside = Posterise(1.0 - heightFrac, _Bands * 0.5, _BandSoftness);
+
+                        float3 colour = _CloudBodyColor.rgb
+                                      + _CloudUndertone.rgb * (_CloudUndertoneStrength * underside)
+                                      + _CoronaColor.rgb * (lit * sunward * _CloudRimStrength);
+
+                        float absorbed = 1.0 - exp(-density * _CloudExtinction * stepLen);
+                        light += colour * absorbed * transmittance;
+                        transmittance *= 1.0 - absorbed;
+
+                        if (transmittance < CLOUD_OPAQUE) break;
+                    }
+
+                    t += stepLen;
+                }
+
+                return float4(light, transmittance);
             }
 
             half4 frag(Varyings IN) : SV_Target
@@ -207,7 +342,7 @@ Shader "SpaceGame/CorruptSkybox"
                 // The red bleeding into the sky around it. Wide, weak, and posterised with the rest
                 // so it bands like everything else rather than being the one smooth gradient.
                 float bleed = pow(saturate(1.0 - saturate(discT / 24.0)), 2.0) * _BloodSky;
-                bleed = Posterise(bleed, _Bands, _BandSoftness);
+                bleed = Posterise(bleed*2, _Bands, _BandSoftness);
 
                 // Only the wide bleed goes down before the overcast, so the pall can dull the red
                 // haze the way cloud dulls a sunset.
@@ -222,6 +357,17 @@ Shader "SpaceGame/CorruptSkybox"
                 pall = Posterise(pall, _Bands * 0.5, _BandSoftness);
                 pall *= saturate(up * 3.0) * _PallStrength;
                 sky = lerp(sky, _PallColor.rgb, pall);
+
+                // The clouds sit in front of the pall and behind the eclipse, for the same reason
+                // the eclipse sits on top of the pall. They fade out towards the horizon, where a
+                // planar slab stretches to infinity and would alias into stripes, and the haze
+                // band is what should be there instead.
+                float cloudFade = smoothstep(0.0, _CloudHorizonFade, height);
+                if (cloudFade > 0.0)
+                {
+                    float4 clouds = MarchClouds(dir, sunDir, IN.positionHCS.xy);
+                    sky = sky * lerp(1.0, clouds.a, cloudFade) + clouds.rgb * cloudFade;
+                }
 
                 // The eclipse itself lands on top of the overcast rather than under it. Physically
                 // that is backwards, but it is the one shape in the sky the player has to be able

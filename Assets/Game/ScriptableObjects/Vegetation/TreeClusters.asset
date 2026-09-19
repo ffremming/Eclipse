@@ -27,7 +27,7 @@ MonoBehaviour:
   perCluster: 30
   items:
   - prefab: {fileID: 5779629262751041144, guid: 23a959ea6ecf746769ab1b89d5228b7e, type: 3}
-    weight: 1
+    weight: 2.5
     scale:
       Min: 0.85
       Max: 1.25
@@ -69,7 +69,7 @@ MonoBehaviour:
       Min: 0
       Max: 0.03
   - prefab: {fileID: 4295843266981930287, guid: e401b85df942b42f7b871d79e170b524, type: 3}
-    weight: 1
+    weight: 0.25
     scale:
       Min: 0.85
       Max: 1.25
@@ -83,7 +83,7 @@ MonoBehaviour:
       Min: 0
       Max: 0.03
   - prefab: {fileID: 2012018047637573769, guid: 9e24b9f371f4e44beaa7bf3a24155f3c, type: 3}
-    weight: 1
+    weight: 0.25
     scale:
       Min: 0.85
       Max: 1.25

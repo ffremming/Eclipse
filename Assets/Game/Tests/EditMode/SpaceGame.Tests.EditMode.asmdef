@@ -6,6 +6,7 @@
         "SpaceGame.Teleporting",
         "SpaceGame.EnemyAI",
         "SpaceGame.Menu",
+        "SpaceGame.Chain",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

@@ -32,11 +32,34 @@ namespace SpaceGame.EditorTools
         /// <summary>Clumps per cell where the grass is thickest.</summary>
         private const int MaxPerCell = 5;
 
-        /// <summary>Metres of ground one blob of grass covers.</summary>
-        private const float BlobSize = 34f;
+        /// <summary>
+        /// Metres of ground one blob of grass covers. Wide, so a blob is a thicket to cross rather
+        /// than a tuft to step over.
+        /// </summary>
+        private const float BlobSize = 64f;
 
-        /// <summary>Share of the ground the grass covers at all.</summary>
-        private const float Coverage = 0.72f;
+        /// <summary>
+        /// Share of the ground the grass covers at all. Under half, so open lanes run between the
+        /// thickets and there is somewhere to see and fight as well as somewhere to hide.
+        /// </summary>
+        private const float Coverage = 0.4f;
+
+        /// <summary>
+        /// Blade height and width as multiples of the prefab, whose blades are 40-50 cm. These stand
+        /// 1.2-2.2 m, over a goblin's head and the camera behind it, so a player in the grass is
+        /// hidden and not merely partly covered. Width grows more slowly than height, or the
+        /// blades would turn into paddles.
+        /// </summary>
+        private const float MinHeight = 3f;
+        private const float MaxHeight = 4.5f;
+        private const float MinWidth = 1.6f;
+        private const float MaxWidth = 2.6f;
+
+        /// <summary>
+        /// How far from the camera the terrain still draws detail, in metres. Taller grass pops in
+        /// more visibly than short, so this reaches further than the terrain's default of 80.
+        /// </summary>
+        private const float DrawDistance = 120f;
 
         /// <summary>Steepest ground grass grows on, in degrees.</summary>
         private const float MaxSlope = 38f;
@@ -58,6 +81,7 @@ namespace SpaceGame.EditorTools
             data.SetDetailResolution(Resolution, ResolutionPerPatch);
             data.detailPrototypes = Prototypes(prefabs);
             data.wavingGrassStrength = 0f; // The wind lives in the shader, not in Unity's grass waving.
+            terrain.detailObjectDistance = DrawDistance;
 
             for (int layer = 0; layer < prefabs.Count; layer++)
             {
@@ -91,10 +115,10 @@ namespace SpaceGame.EditorTools
                     renderMode = DetailRenderMode.VertexLit,
                     useInstancing = true,
                     usePrototypeMesh = true,
-                    minWidth = 0.8f,
-                    maxWidth = 1.6f,
-                    minHeight = 0.9f,
-                    maxHeight = 1.8f,
+                    minWidth = MinWidth,
+                    maxWidth = MaxWidth,
+                    minHeight = MinHeight,
+                    maxHeight = MaxHeight,
                     noiseSeed = 1 + index,
                     noiseSpread = 0.2f,
                     alignToGround = 0.4f,

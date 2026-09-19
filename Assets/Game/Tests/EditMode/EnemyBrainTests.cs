@@ -19,6 +19,8 @@ namespace SpaceGame.Tests
             WanderRadius = 10f,
             WanderPause = 2f,
             ArrivalRadius = 1f,
+            WalkSpeed = 2f,
+            ChaseSpeed = 5f,
         };
 
         private static EnemySenses Calm(Vector3 position) => new EnemySenses
@@ -113,6 +115,24 @@ namespace SpaceGame.Tests
             Assert.AreEqual(EnemyState.ReturnHome, decision.State);
             Assert.AreEqual(Vector3.zero, decision.Destination, "it should head back to camp");
             Assert.IsFalse(brain.IsAggravated(0f), "and stop being angry, or it turns straight round");
+        }
+
+        [Test]
+        public void ItStrollsAtAWalkAndHuntsAtARun()
+        {
+            var brain = new EnemyBrain(Settings);
+
+            EnemySenses strolling = Calm(new Vector3(0f, 0f, 3f));
+            strolling.HasWanderTarget = true;
+            strolling.WanderTarget = new Vector3(4f, 0f, 3f);
+
+            EnemyDecision walk = brain.Tick(strolling, 0f);
+            Assert.AreEqual(EnemyState.Wander, walk.State);
+            Assert.AreEqual(2f, walk.Speed, "a calm enemy should not cross camp at full tilt");
+
+            EnemyDecision run = brain.Tick(Seeing(new Vector3(0f, 0f, 3f), new Vector3(0f, 0f, 20f)), 1f);
+            Assert.AreEqual(EnemyState.Chase, run.State);
+            Assert.AreEqual(5f, run.Speed);
         }
 
         [Test]

@@ -34,8 +34,11 @@ namespace SpaceGame.World
         [Tooltip("Must match the skybox's haze colour, or distant terrain ends at a visible seam.")]
         [SerializeField] private Color fogColor = new Color(0.135f, 0.128f, 0.120f);
 
-        [Tooltip("Extinction per metre at the base height. Small numbers: 0.01 is already thick.")]
-        [SerializeField] private float fogDensity = 0.016f;
+        [Tooltip("Extinction per metre at the base height. Small numbers: 0.01 is already thick. " +
+                 "This is a hard cap on how far ANY light can be seen — at 0.016 a torch is 80% " +
+                 "swallowed by 100 metres no matter how bright it is, so raise it only once the " +
+                 "lighting reads at the distance you want.")]
+        [SerializeField] private float fogDensity = 0.0045f;
 
         [Tooltip("World height at which the fog reaches its full density.")]
         [SerializeField] private float fogBaseHeight = 6f;
@@ -44,7 +47,7 @@ namespace SpaceGame.World
         [SerializeField] private float fogFalloff = 0.035f;
 
         [Tooltip("Metres of clear air in front of the eye before fog starts to accumulate.")]
-        [SerializeField] private float fogStart = 4f;
+        [SerializeField] private float fogStart = 12f;
 
         [Header("Ambient")]
         [Tooltip("Light that arrives from nowhere. Keep this very low — the point of the world is " +
