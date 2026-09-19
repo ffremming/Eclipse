@@ -39,9 +39,13 @@ namespace SpaceGame.Castle
         [Header("What it lights")]
         [SerializeField] private Reach reach = Reach.Local;
 
-        [Tooltip("Metres the local light reaches. The first castle lights a 50 m square, so 25 m " +
-                 "from the tower carries to its corners.")]
+        [Tooltip("Metres the local light reaches ALONG THE GROUND. The first castle lights a 50 m " +
+                 "square, so 25 m from the tower carries to its corners.")]
         [SerializeField] private float localRadius = 35f;
+
+        [Tooltip("Metres above the castle the local light hangs. High enough to clear the walls, " +
+                 "so the courtyard is lit rather than shadowed by its own battlements.")]
+        [SerializeField] private float localHeight = 18f;
 
         [Tooltip("Brightness the local light settles at.")]
         [SerializeField] private float localIntensity = 14f;
@@ -62,8 +66,9 @@ namespace SpaceGame.Castle
         [Tooltip("Where the orb forms, usually just above the lantern deck.")]
         [SerializeField] private Transform orbAnchor;
 
-        [Tooltip("How large the orb grows, as a multiple of its prefab's own scale.")]
-        [SerializeField] private float orbScale = 6f;
+        [Tooltip("How large the orb grows, as a multiple of its prefab's own scale. The orb prefab " +
+                 "stands at unit scale, so this is its diameter in metres.")]
+        [SerializeField] private float orbScale = 24f;
 
         [Header("World")]
         [Tooltip("The atmosphere this drives, for Reach.World. Left empty it finds the one in the " +
@@ -80,6 +85,8 @@ namespace SpaceGame.Castle
         private Light localLamp;
         private Transform orb;
         private Vector3 orbFullScale;
+        private Light[] orbLamps;
+        private float[] orbFullIntensities;
         private bool announced;
 
         private void Awake()
@@ -115,6 +122,13 @@ namespace SpaceGame.Castle
 
             if (orb != null) orb.localScale = orbFullScale * blend;
             if (localLamp != null) localLamp.intensity = localIntensity * blend;
+
+            // The orb's own lights, brought up with it. Scaling a transform does nothing to a
+            // Light's range or intensity, so without this the orb grows to the size of the tower
+            // while lighting exactly as much as it did when it was a point.
+            for (int i = 0; orbLamps != null && i < orbLamps.Length; i++)
+                orbLamps[i].intensity = orbFullIntensities[i] * blend;
+
             if (atmosphere != null && reach == Reach.World) atmosphere.DaylightBlend = blend;
 
             if (announced || !progress.Finished) return;
@@ -136,22 +150,41 @@ namespace SpaceGame.Castle
             // after the first frame the live scale is no longer that.
             orbFullScale = orb.localScale * orbScale;
             orb.localScale = Vector3.zero;
+
+            // Read once, for the same reason as the scale: after the first frame the live
+            // intensities are whatever the rise last set them to, not what the prefab authored.
+            orbLamps = spawned.GetComponentsInChildren<Light>(true);
+            orbFullIntensities = new float[orbLamps.Length];
+
+            for (int i = 0; i < orbLamps.Length; i++)
+            {
+                orbFullIntensities[i] = orbLamps[i].intensity;
+                orbLamps[i].intensity = 0f;
+            }
         }
 
         /// <summary>
         /// The lamp that lights the ground around the first castle. Built here rather than placed
         /// in the scene so its radius cannot disagree with <see cref="localRadius"/>.
+        /// <para>
+        /// Hung over the CASTLE rather than on the orb. The orb sits above the tower's lantern deck
+        /// and the tower is the tallest thing here, so a lamp up there is forty metres above the
+        /// courtyard it is supposed to be lighting — and a range that covers that distance is a
+        /// range that spills well past the grounds.
+        /// </para>
         /// </summary>
         private void SpawnLocalLamp()
         {
-            Transform anchor = orbAnchor != null ? orbAnchor : transform;
-
             var lampObject = new GameObject("Lightfall Lamp");
-            lampObject.transform.SetPositionAndRotation(anchor.position, anchor.rotation);
+            lampObject.transform.position = transform.position + Vector3.up * localHeight;
 
             localLamp = lampObject.AddComponent<Light>();
             localLamp.type = LightType.Point;
-            localLamp.range = localRadius;
+
+            // Range is the slant distance, not the radius: a lamp hung high enough to clear the
+            // walls reaches less far along the ground than its range, and localRadius promises the
+            // ground figure.
+            localLamp.range = Mathf.Sqrt(localRadius * localRadius + localHeight * localHeight);
             localLamp.color = Color.white;
             localLamp.intensity = 0f;
 

@@ -60,8 +60,11 @@ namespace SpaceGame.Enemies
         // allocating overlap query per frame of every enemy's hit window is a steady drip of garbage.
         private readonly Collider[] overlapBuffer = new Collider[32];
 
-        // Instance ids rather than GameObjects: a body is several colliders, and without this a
-        // single swing would land once per limb it happened to clip.
+        // The DAMAGEABLE's instance id, not the transform root's. A body is several colliders, and
+        // without this a single swing would land once per limb it happened to clip — but the root is
+        // the wrong thing to key on, because a castle parents its garrison AND the beacon at the top
+        // of its tower under the terrain, so every one of them shares a root. Keyed that way, one
+        // swing could only ever reach the first of them it found.
         private readonly HashSet<int> alreadyHit = new HashSet<int>();
 
         private float windowOpensAt = float.PositiveInfinity;
@@ -149,31 +152,26 @@ namespace SpaceGame.Enemies
                 Collider hit = overlapBuffer[i];
                 if (hit == null) continue;
 
-                Transform root = hit.transform.root;
-                if (root == self) continue;
-
-                int id = root.GetInstanceID();
-                if (alreadyHit.Contains(id)) continue;
+                if (hit.transform.root == self) continue;
 
                 // The collider's own position, not the root's: on a humanoid the root sits between
                 // the feet, and a chest collider is the honest thing to ask "were you in the arc".
                 if (!Cone.Contains(sweepOrigin, forward, hit.bounds.center, range, halfAngle))
                     continue;
 
+                // Scenery is simply skipped. It used to be recorded as hit so the rest of the window
+                // would not look at it again, which cost nothing while the key was the transform
+                // root — and silently swallowed the swing once anything damageable shared that root.
+                var damageable = hit.GetComponentInParent<IDamageable>() as Component;
+                if (damageable == null) continue;
+
                 // Recorded before the damage lands, so a target that dies to this swing still
                 // cannot be hit twice by the rest of the window.
-                alreadyHit.Add(id);
-
-                if (!HasHealth(hit)) continue;
+                if (!alreadyHit.Add(damageable.GetInstanceID())) continue;
 
                 Damage.Apply(hit.gameObject, damage, transform);
             }
         }
-
-        // Asked so that scenery inside the arc is marked as hit — and so skipped for the rest of the
-        // window — without a sound or a damage call being spent on it.
-        private static bool HasHealth(Component target)
-            => target.GetComponentInParent<IDamageable>() != null;
 
         private void OnDrawGizmosSelected()
         {

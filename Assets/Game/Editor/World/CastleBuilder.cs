@@ -33,7 +33,6 @@ namespace SpaceGame.EditorTools
     {
         private const string ModelFolder = "Assets/Game/Art/Models/World/Castle";
         private const string AnchorPath = ModelFolder + "/CastleAnchors.json";
-        private const string OrbPrefabPath = "Assets/Game/Prefabs/Items/LightOrb.prefab";
         private const string DaylightPath = "Assets/Game/Data/DaylightProfile.asset";
 
         /// <summary>
@@ -56,8 +55,32 @@ namespace SpaceGame.EditorTools
         /// </summary>
         private const float Embed = 0.15f;
 
-        /// <summary>Metres above the deck the orb of light forms at.</summary>
-        private const float OrbHeight = 3.5f;
+        /// <summary>
+        /// Metres above the deck the orb of light forms at, and metres across it grows to.
+        /// <para>
+        /// Sized and hung so the orb takes the top of the tower without swallowing the player
+        /// standing on the deck under it: its underside settles a couple of metres above their
+        /// head. Inside it there is nothing to see — the orb is additive and single-sided, so a
+        /// camera within it is a camera looking at the back of a surface that is not drawn.
+        /// </para>
+        /// </summary>
+        private const float OrbHeight = 15f;
+        private const float OrbDiameter = 24f;
+
+        /// <summary>
+        /// Metres out from the keep's door the player is set down when the light has come, and
+        /// metres out the key they earned is left lying. The key is nearer, so it is between them
+        /// and the castle rather than behind them.
+        /// </summary>
+        private const float ReturnStandoff = 6f;
+        private const float RewardStandoff = 3.2f;
+
+        /// <summary>
+        /// How high off the shelf the key is dropped, in metres. It falls the rest of the way on
+        /// its own drop physics, which is what settles it onto the actual ground rather than onto
+        /// the flat the shelf is assumed to be.
+        /// </summary>
+        private const float RewardDropHeight = 1.2f;
 
         /// <summary>
         /// Half the side of the square the first castle lights. The brief is a 50 m square, and a
@@ -184,6 +207,8 @@ namespace SpaceGame.EditorTools
 
             Transform deck = Anchor(root.transform, "TowerDeck", anchors.towerDeck);
             Transform beaconAt = Anchor(root.transform, "BeaconCore", anchors.towerBeacon);
+            Transform returnTo = ReturnStand(root.transform, anchors.keepEntrance);
+            Transform rewardAt = RewardStand(root.transform, anchors.keepEntrance);
 
             TowerBeacon beacon = BuildBeacon(beaconAt);
             Lightfall lightfall = BuildLightfall(root.transform, deck, reach);
@@ -200,7 +225,8 @@ namespace SpaceGame.EditorTools
             var encounter = root.AddComponent<CastleEncounter>();
             ItemBuilderKit.Wire(encounter, "beacon", beacon);
             ItemBuilderKit.Wire(encounter, "lightfall", lightfall);
-            ItemBuilderKit.Wire(encounter, "rewardAnchor", deck);
+            ItemBuilderKit.Wire(encounter, "returnTo", returnTo);
+            ItemBuilderKit.Wire(encounter, "rewardAnchor", rewardAt);
 
             if (reward != null)
             {
@@ -217,15 +243,20 @@ namespace SpaceGame.EditorTools
         // ------------------------------------------------------------------
 
         /// <summary>
-        /// The core the player strikes. Its collider is a trigger, so it is something a swing finds
-        /// rather than something the player's body collides with while standing on the deck beside it.
+        /// The core the player strikes.
+        /// <para>
+        /// Its collider is SOLID, and it has to be. It was a trigger, so that the player could
+        /// stand on the deck without bumping into it — but <c>MeleeStrike</c> sweeps with
+        /// <c>QueryTriggerInteraction.Ignore</c>, so the swing looked straight through it and the
+        /// beacon could not be struck at all. A player could hit it as long as they liked and
+        /// nothing in the game would ever happen.
+        /// </para>
         /// </summary>
         private static TowerBeacon BuildBeacon(Transform at)
         {
             var collider = at.gameObject.AddComponent<CapsuleCollider>();
             collider.radius = 1.1f;
             collider.height = 2.4f;
-            collider.isTrigger = true;
 
             var light = at.gameObject.AddComponent<Light>();
             light.type = LightType.Point;
@@ -245,14 +276,45 @@ namespace SpaceGame.EditorTools
             anchor.transform.SetParent(root, false);
             anchor.transform.position = deck.position + Vector3.up * OrbHeight;
 
+            GameObject orb = AssetDatabase.LoadAssetAtPath<GameObject>(
+                                 LightfallOrbBuilder.PrefabPath)
+                             ?? LightfallOrbBuilder.Build();
+
             var lightfall = root.gameObject.AddComponent<Lightfall>();
             ItemBuilderKit.WireEnum(lightfall, "reach", (int)reach);
             ItemBuilderKit.Wire(lightfall, "orbAnchor", anchor.transform);
-            ItemBuilderKit.Wire(lightfall, "orbPrefab",
-                                AssetDatabase.LoadAssetAtPath<GameObject>(OrbPrefabPath));
+            ItemBuilderKit.Wire(lightfall, "orbPrefab", orb);
+            ItemBuilderKit.WireFloat(lightfall, "orbScale", OrbDiameter);
             ItemBuilderKit.WireFloat(lightfall, "localRadius", LocalLightRadius);
             return lightfall;
         }
+
+        /// <summary>
+        /// Where the player is set down when the castle is finished: out in front of the keep's
+        /// door, turned to face it, so the first thing they see is the tower with the orb over it.
+        /// </summary>
+        private static Transform ReturnStand(Transform root, Vector3 keepEntrance)
+        {
+            Transform stand = Anchor(root, "ReturnStand", GroundOutside(keepEntrance, ReturnStandoff));
+
+            // Facing back down the castle's own +Z, which is the axis the doors are laid out on and
+            // so the direction the player is standing away from the keep along.
+            stand.localRotation = Quaternion.LookRotation(Vector3.back, Vector3.up);
+            return stand;
+        }
+
+        /// <summary>Where the key the castle pays out is dropped: between the player and the door.</summary>
+        private static Transform RewardStand(Transform root, Vector3 keepEntrance)
+            => Anchor(root, "RewardStand",
+                      GroundOutside(keepEntrance, RewardStandoff) + Vector3.up * RewardDropHeight);
+
+        /// <summary>
+        /// A point on the shelf <paramref name="standoff"/> metres out from the keep's door. The
+        /// anchor's own height is the middle of the doorway, so the ground is the <see cref="Embed"/>
+        /// the whole castle is sunk by rather than the anchor's Y.
+        /// </summary>
+        private static Vector3 GroundOutside(Vector3 keepEntrance, float standoff)
+            => new Vector3(keepEntrance.x, Embed, keepEntrance.z + standoff);
 
         /// <summary>
         /// A door: the leaf that is already in the model, plus the lock that holds it and the light

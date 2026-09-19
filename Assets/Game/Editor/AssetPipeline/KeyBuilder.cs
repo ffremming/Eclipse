@@ -39,6 +39,31 @@ namespace SpaceGame.EditorTools
         public const string TowerKeyName = "TowerKey";
 
         /// <summary>
+        /// One key: the name its files are under, what the player is told it is, and the colour of
+        /// the light it will eventually let loose.
+        /// <para>
+        /// The display name is not the asset name, and the difference is the point. On the disk a
+        /// key is <c>WallKey</c>, which says which door it fits; on the screen it is "Key to the
+        /// Fortress", which says what it just bought the player — see <c>KeyBanner</c>, the one
+        /// place in this game that puts a sentence in front of anyone. A key with a filename for a
+        /// display name would name the door to a player who has never seen it.
+        /// </para>
+        /// </summary>
+        private readonly struct Key
+        {
+            public readonly string Name;
+            public readonly string DisplayName;
+            public readonly Color Colour;
+
+            public Key(string name, string displayName, Color colour)
+            {
+                Name = name;
+                DisplayName = displayName;
+                Colour = colour;
+            }
+        }
+
+        /// <summary>
         /// Radius of the volume the key is collected from, in metres. Wide — far wider than the key
         /// itself. It is collected by walking rather than by aiming, so what matters is that
         /// crossing the ground the key is on works, not that the player's capsule touched a 30 cm
@@ -51,14 +76,17 @@ namespace SpaceGame.EditorTools
 
         // Each key is the colour of the light it will eventually let loose, so a player who has
         // seen one lighthouse lit can read what the second key is for before using it.
-        private static readonly Color WallKeyColour = new Color(0.95f, 0.62f, 0.25f);
-        private static readonly Color TowerKeyColour = new Color(0.55f, 0.92f, 1f);
+        private static readonly Key[] Keys =
+        {
+            new Key(WallKeyName, "Key to the Fortress", new Color(0.95f, 0.62f, 0.25f)),
+            new Key(TowerKeyName, "Key to the Keep", new Color(0.55f, 0.92f, 1f)),
+        };
 
         [MenuItem("Tools/Eclipse/Items/Build Castle Keys")]
         private static void BuildBoth()
         {
-            Build(WallKeyName, WallKeyColour);
-            Build(TowerKeyName, TowerKeyColour);
+            foreach (Key key in Keys) Build(key);
+
             AssetDatabase.SaveAssets();
             Debug.Log("[Keys] Built the wall key and the tower key.");
         }
@@ -66,8 +94,10 @@ namespace SpaceGame.EditorTools
         /// <summary>
         /// Builds one key and returns its inventory asset, or null when its model is missing.
         /// </summary>
-        public static InventoryItem Build(string name, Color colour)
+        private static InventoryItem Build(Key key)
         {
+            string name = key.Name;
+            Color colour = key.Colour;
             string modelPath = $"{ModelFolder}/{name}.fbx";
             GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
             if (model == null)
@@ -111,6 +141,7 @@ namespace SpaceGame.EditorTools
             Object.DestroyImmediate(root);
 
             InventoryItem item = ItemBuilderKit.EnsureItemAsset(name, prefab);
+            Name(item, key);
 
             // The back-reference, which can only be made once both files exist.
             ItemBuilderKit.Wire(prefab.GetComponent<KeyPickup>(), "key", item);
@@ -126,12 +157,36 @@ namespace SpaceGame.EditorTools
         /// </summary>
         public static InventoryItem Load(string name)
         {
+            foreach (Key key in Keys)
+                if (key.Name == name) return Load(key);
+
+            Debug.LogError($"[Keys] There is no key called {name}.");
+            return null;
+        }
+
+        private static InventoryItem Load(Key key)
+        {
             var existing = AssetDatabase.LoadAssetAtPath<InventoryItem>(
-                $"{ItemBuilderKit.ItemFolder}/{name}.asset");
+                $"{ItemBuilderKit.ItemFolder}/{key.Name}.asset");
 
-            if (existing != null) return existing;
+            if (existing == null) return Build(key);
 
-            return Build(name, name == WallKeyName ? WallKeyColour : TowerKeyColour);
+            Name(existing, key);
+            return existing;
+        }
+
+        /// <summary>
+        /// Gives the asset the name the player sees. Done on load as well as on build, because
+        /// <c>EnsureItemAsset</c> names a NEW asset after its file and leaves an existing one
+        /// alone — so a key made before this display name existed would go on calling itself
+        /// "WallKey" on screen until somebody rebuilt it by hand.
+        /// </summary>
+        private static void Name(InventoryItem item, Key key)
+        {
+            if (item == null || item.itemName == key.DisplayName) return;
+
+            item.itemName = key.DisplayName;
+            EditorUtility.SetDirty(item);
         }
 
         /// <summary>The pickup prefab a key is dropped into the world as.</summary>

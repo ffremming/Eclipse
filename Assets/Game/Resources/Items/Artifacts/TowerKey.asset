@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TowerKey
   m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Items.InventoryItem
   <ID>k__BackingField: 7f334603dffca4b96989dc3b610f9409
-  itemName: TowerKey
+  itemName: Key to the Keep
   itemPrefab: {fileID: 3978416112903781595, guid: 9fa01742c19c54023b162695f5d5e898, type: 3}
   icon: {fileID: 0}
   iconPrefab: {fileID: 0}

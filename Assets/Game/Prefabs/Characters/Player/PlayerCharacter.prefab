@@ -202,6 +202,7 @@ GameObject:
   - component: {fileID: 7350186294057281663}
   - component: {fileID: 4667496392460210910}
   - component: {fileID: 2314435313842449330}
+  - component: {fileID: 3915772064880221570}
   m_Layer: 0
   m_Name: PlayerCharacter
   m_TagString: Player
@@ -737,6 +738,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61ee6afe1d42c4b05a86b284fe9cd3e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Castle.PlayerKeyRing
+--- !u!114 &3915772064880221570
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4516265153368369930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea127c7535884d3585c24c5635ffa485, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Presentation.KeyBanner
+  ring: {fileID: 2314435313842449330}
+  style:
+    heightAboveCentre: 210
+    width: 1100
+    fontSize: 58
+    ink: {r: 1, g: 0.93, b: 0.78, a: 1}
+    shadow: {r: 0, g: 0, b: 0, a: 0.75}
+    shadowOffset: 3
+    riseSeconds: 0.45
+    holdSeconds: 3.2
+    fallSeconds: 1.1
+    drift: 26
+    referenceResolution: {x: 1920, y: 1080}
+    sortingOrder: 150
 --- !u!1 &7420260919000000104
 GameObject:
   m_ObjectHideFlags: 0

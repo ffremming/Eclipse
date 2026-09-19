@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: WallKey
   m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Items.InventoryItem
   <ID>k__BackingField: c63ebbb6135994d35877fc978482df22
-  itemName: WallKey
+  itemName: Key to the Fortress
   itemPrefab: {fileID: 3698650169572663151, guid: 284c67459272c42fe9d6f4987b79c10a, type: 3}
   icon: {fileID: 0}
   iconPrefab: {fileID: 0}
