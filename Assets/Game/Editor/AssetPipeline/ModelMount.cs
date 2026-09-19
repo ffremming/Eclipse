@@ -84,6 +84,61 @@ namespace SpaceGame.EditorTools
             return new MountedModel(tip.transform, grip);
         }
 
+        /// <summary>Which point of a model lands on the origin of the transform it is mounted under.</summary>
+        public enum Anchor
+        {
+            /// <summary>The middle of its bounds. What a thing that spins is spun about.</summary>
+            Centre,
+
+            /// <summary>Straight above the middle, at the top of its bounds. What a thing that hangs is hung from.</summary>
+            Top,
+        }
+
+        /// <summary>
+        /// Instances <paramref name="modelPath"/> under <paramref name="parent"/>, scaled so its
+        /// longest side is <paramref name="targetSize"/> metres, with <paramref name="anchor"/> on the
+        /// origin, and returns the holder that carries it.
+        /// <para>
+        /// Not turned at all, unlike <see cref="Mount"/>, which stands everything along +Y like a
+        /// blade. A boomerang has no long end to stand on and a lantern is already upright, and both
+        /// are laid out by what the item does with them rather than by which side is longest.
+        /// </para>
+        /// </summary>
+        public static Transform MountAt(Transform parent, string modelPath, float targetSize, Anchor anchor)
+        {
+            GameObject source = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+            if (source == null)
+            {
+                Debug.LogError($"[ModelMount] No model at {modelPath}.");
+            }
+
+            GameObject holder = new GameObject("Model");
+            holder.transform.SetParent(parent, false);
+
+            if (source != null)
+            {
+                GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(source, holder.transform);
+                instance.transform.localPosition = Vector3.zero;
+
+                if (TryGetLocalBounds(instance, holder.transform, out Bounds bounds))
+                {
+                    float longest = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+                    if (longest > 1e-4f)
+                    {
+                        float scale = targetSize / longest;
+                        instance.transform.localScale *= scale;
+
+                        Vector3 point = anchor == Anchor.Top
+                            ? new Vector3(bounds.center.x, bounds.max.y, bounds.center.z)
+                            : bounds.center;
+                        instance.transform.localPosition = -point * scale;
+                    }
+                }
+            }
+
+            return holder.transform;
+        }
+
         /// <summary>
         /// The rotation that puts the longest axis on +Y with the handle at the bottom. An
         /// already-upright model with its handle low takes the identity, so its authored

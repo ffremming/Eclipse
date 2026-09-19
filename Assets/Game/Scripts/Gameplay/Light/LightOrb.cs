@@ -21,8 +21,9 @@ namespace SpaceGame.Gameplay
         [Tooltip("How much light the orb restores when taken.")]
         [SerializeField] private int lightValue = 1;
 
-        [Tooltip("Seconds after being thrown before it can be taken. Without it the orbs a hit throws " +
-                 "out of the player land on the player and are taken straight back.")]
+        [Tooltip("Seconds after being thrown before it can be taken. Without it an orb shed by an " +
+                 "enemy the player is stood against is taken before it has visibly left the body, " +
+                 "and the payout for the hit is never seen.")]
         [SerializeField] private float pickupDelay = 0.8f;
 
         [Header("Fall")]
@@ -112,7 +113,7 @@ namespace SpaceGame.Gameplay
             transform.position = new Vector3(position.x, restHeight + offset, position.z);
         }
 
-        // The highest surface below the point that is not somebody's body. A goblin's head is under a
+        // The highest surface below the point that is not somebody's body. A creature's head is under a
         // falling orb as often as the floor is, and an orb that came to rest on one would ride away on it.
         private bool TryFindGround(Vector3 from, out float groundY)
         {

@@ -10,7 +10,7 @@
 // centre of the tree, which a rate derived from speed would otherwise freeze solid the moment the
 // character stood still.
 //
-// Shared by the player and the goblins because they wear the same controller, and that controller
+// Shared by the player and the enemies because they wear the same controller, and that controller
 // multiplies its Move and Crouch states by MoveAnimSpeed. The parameter defaults to zero, so a body
 // that never writes it has legs that do not move at all.
 using UnityEngine;

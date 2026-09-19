@@ -50,7 +50,7 @@ namespace SpaceGame.Enemies
 
             bool aggravated = senses.HasTarget && time < aggroUntil;
 
-            // Only ever announced by an enemy that worked it out for itself. A goblin that was told
+            // Only ever announced by an enemy that worked it out for itself. A creature that was told
             // does not pass it on, which is what keeps one shout from echoing around a camp forever.
             bool shout = !wasAggravated && aggravated && (sawTarget || senses.TookDamage);
 

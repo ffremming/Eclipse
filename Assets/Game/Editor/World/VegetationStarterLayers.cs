@@ -42,11 +42,11 @@ namespace SpaceGame.EditorTools
             // so it is the undergrowth rather than one kind among three.
             new Preset("Foliage/Fern", "Ferns", VegetationDistribution.Patch, patchSize: 26f, coverage: 0.4f, spacing: 2.6f,
                        nameContains: "Bracken", scaleMin: 1.8f, scaleMax: 3f),
-            new Preset("Foliage/Mushroom", "Mushrooms", VegetationDistribution.Patch, patchSize: 16f, coverage: 0.14f, spacing: 2.5f,
-                       scaleMin: 2f, scaleMax: 4f),
+            // No mushrooms here: that layer is written by GlowMushroomBuilder, which points it at
+            // glowing, breakable variants. Running this over it would put the plain pack prefabs back.
             new Preset("Foliage/GroundCover", "GroundCover", VegetationDistribution.Patch, patchSize: 20f, coverage: 0.35f, spacing: 3.5f,
                        scaleMin: 1.5f, scaleMax: 2.5f),
-            // The wind pack's blades are 40-50 cm, so this stands 1.2-2.2 m: over a goblin's head.
+            // The wind pack's blades are 40-50 cm, so this stands 1.2-2.2 m: over a creature's head.
             new Preset("LowPolyWind", "TallGrass", VegetationDistribution.Patch, patchSize: 40f, coverage: 0.35f, spacing: 2.4f,
                        nameContains: "Tall", scaleMin: 3f, scaleMax: 4.5f),
             // The 6.5 m A1 is the stand's main tree, with the 11 m and 9 m C1s left as the odd tall one.

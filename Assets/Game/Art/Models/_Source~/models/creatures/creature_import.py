@@ -17,6 +17,11 @@ What it does beyond a plain import, and why:
     Maya's StingrayPBS and Sketchfab's embedded maps, leaving flat grey materials. The maps are
     Unity's packed layout -- metallic in R, smoothness in A -- so roughness is `1 - A`.
 
+`rebuild_material` is shared with the one-time sculpt-base imports beside this script, which is why
+every map is optional: a pack that ships only a base colour gets a base colour, and a slot that
+ships no map at all takes a flat `colour`/`roughness` instead. Asking for a map the pack never
+shipped would otherwise mean either a broken image node or a second copy of this node graph.
+
 Texture paths are made relative so the .blend keeps finding the maps wherever the repository is
 checked out.
 """
@@ -75,6 +80,11 @@ def load_map(textures: Path, filename: str, colorspace: str) -> bpy.types.Image:
 
 
 def rebuild_material(material: bpy.types.Material, maps: dict, textures: Path) -> None:
+    """Rebuild `material` as a Principled BSDF fed by whichever of `maps` is present.
+
+    Keys, all optional: `base`, `packed`, `normal`, `emissive` name image files under `textures`;
+    `colour` and `roughness` set a flat value for a slot the pack shipped no map for.
+    """
     tree = material.node_tree
     tree.nodes.clear()
 
@@ -90,24 +100,31 @@ def rebuild_material(material: bpy.types.Material, maps: dict, textures: Path) -
     bsdf.location = (300, 0)
     tree.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
 
-    base = image_node("base", "sRGB", (-600, 300))
-    tree.links.new(base.outputs["Color"], bsdf.inputs["Base Color"])
+    if "base" in maps:
+        base = image_node("base", "sRGB", (-600, 300))
+        tree.links.new(base.outputs["Color"], bsdf.inputs["Base Color"])
+    elif "colour" in maps:
+        bsdf.inputs["Base Color"].default_value = (*maps["colour"], 1.0)
 
-    packed = image_node("packed", "Non-Color", (-600, 0))
-    split = tree.nodes.new("ShaderNodeSeparateColor")
-    split.location = (-300, 0)
-    tree.links.new(packed.outputs["Color"], split.inputs["Color"])
-    tree.links.new(split.outputs["Red"], bsdf.inputs["Metallic"])
-    invert = tree.nodes.new("ShaderNodeInvert")
-    invert.location = (-300, -200)
-    tree.links.new(packed.outputs["Alpha"], invert.inputs["Color"])
-    tree.links.new(invert.outputs["Color"], bsdf.inputs["Roughness"])
+    if "packed" in maps:
+        packed = image_node("packed", "Non-Color", (-600, 0))
+        split = tree.nodes.new("ShaderNodeSeparateColor")
+        split.location = (-300, 0)
+        tree.links.new(packed.outputs["Color"], split.inputs["Color"])
+        tree.links.new(split.outputs["Red"], bsdf.inputs["Metallic"])
+        invert = tree.nodes.new("ShaderNodeInvert")
+        invert.location = (-300, -200)
+        tree.links.new(packed.outputs["Alpha"], invert.inputs["Color"])
+        tree.links.new(invert.outputs["Color"], bsdf.inputs["Roughness"])
+    elif "roughness" in maps:
+        bsdf.inputs["Roughness"].default_value = maps["roughness"]
 
-    normal = image_node("normal", "Non-Color", (-600, -300))
-    normal_map = tree.nodes.new("ShaderNodeNormalMap")
-    normal_map.location = (-300, -400)
-    tree.links.new(normal.outputs["Color"], normal_map.inputs["Color"])
-    tree.links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
+    if "normal" in maps:
+        normal = image_node("normal", "Non-Color", (-600, -300))
+        normal_map = tree.nodes.new("ShaderNodeNormalMap")
+        normal_map.location = (-300, -400)
+        tree.links.new(normal.outputs["Color"], normal_map.inputs["Color"])
+        tree.links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
 
     if "emissive" in maps:
         emissive = image_node("emissive", "sRGB", (-600, -600))

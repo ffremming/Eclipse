@@ -25,19 +25,19 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _BandSoftness: 0.18
-    - _Bands: 5
-    - _CoreWidth: 0.34
-    - _Height: 0.85
-    - _Intensity: 3.4
-    - _Lick: 5
-    - _RiseSpeed: 3.2
-    - _Stoke: 0
-    - _StokeHeight: 0.7
-    - _StokeIntensity: 3.5
-    - _Taper: 2.2
-    - _TurbulenceAmount: 0.42
-    - _TurbulenceScale: 7
+    - _BandSoftness: 0
+    - _Bands: 6.27
+    - _CoreWidth: 0.217
+    - _Height: 1
+    - _Intensity: 0.73
+    - _Lick: 6.44
+    - _RiseSpeed: 8.61
+    - _Stoke: 0.018
+    - _StokeHeight: 0.376
+    - _StokeIntensity: 3.71
+    - _Taper: 1.88
+    - _TurbulenceAmount: 1
+    - _TurbulenceScale: 1
     m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1

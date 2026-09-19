@@ -10,7 +10,7 @@
 // button, an enemy when its brain says so), and this decides what that swing connects with.
 //
 // Timing rather than an animation event, for two reasons. An animation event lives in a clip, so
-// retiming a swing means reopening the FBX import — and the goblin clips are shared by the player
+// retiming a swing means reopening the FBX import — and the clips are shared by the player
 // and every enemy, so there is nowhere to put a windup that differs between them. Serialized
 // seconds can be tuned per prefab in the Inspector.
 using System.Collections.Generic;
@@ -74,6 +74,24 @@ namespace SpaceGame.Enemies
         public bool IsSwinging => swinging;
 
         /// <summary>
+        /// Raised the moment a swing starts — the start of the windup, not of the hit window.
+        /// <para>
+        /// What a weapon in the hand hangs its flare off, so the blade lights up as the arm goes
+        /// back rather than as the blow lands. The tell is the windup: an attack whose weapon only
+        /// reacts on contact has told the player nothing they could still act on
+        /// (<c>GDC-L1-FEEL-0004</c>).
+        /// </para>
+        /// </summary>
+        public event System.Action SwingStarted;
+
+        /// <summary>
+        /// How long a swing lasts from its start to the blade going cold, in seconds. What a held
+        /// weapon paces its own effects by, so a slow heavy enemy's blade burns for as long as its
+        /// arm takes rather than for a length of its own.
+        /// </summary>
+        public float SwingDuration => windup + hitWindow;
+
+        /// <summary>
         /// Start a swing. The blade turns dangerous after the windup and stays so for the hit
         /// window; a swing already underway is left alone rather than restarted.
         /// </summary>
@@ -85,6 +103,8 @@ namespace SpaceGame.Enemies
             windowOpensAt = Time.time + windup;
             windowClosesAt = windowOpensAt + hitWindow;
             alreadyHit.Clear();
+
+            SwingStarted?.Invoke();
         }
 
         /// <summary>Drop a swing in progress — used when the swinger is knocked down or killed.</summary>

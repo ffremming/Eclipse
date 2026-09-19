@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using SpaceGame.Castle;
 using SpaceGame.Vegetation;
 using UnityEngine;
 
@@ -29,7 +31,13 @@ namespace SpaceGame.EditorTools
         /// </summary>
         /// <param name="resolution">Heightmap resolution, which Unity wants as a power of two plus one.</param>
         /// <param name="sizeMetres">Side length of the terrain, so the noise is sized in metres rather than samples.</param>
-        public static float[,] Heights(int resolution, float sizeMetres, int seed)
+        /// <param name="sites">
+        /// Flat shelves to stamp into the land for buildings to stand on, or null for bare island.
+        /// Applied after the noise and the shore falloff, so a shelf is the last word on its own
+        /// ground — see <see cref="CastleSite"/>.
+        /// </param>
+        public static float[,] Heights(int resolution, float sizeMetres, int seed,
+                                       IReadOnlyList<CastleSite> sites = null)
         {
             float[,] heights = new float[resolution, resolution];
             float step = sizeMetres / (resolution - 1);
@@ -47,11 +55,67 @@ namespace SpaceGame.EditorTools
 
                     // Unity indexes a heightmap [z, x]; swapping them mirrors the island against
                     // the splat map and the vegetation, which both work in world metres.
-                    heights[z, x] = land * Falloff(worldX, worldZ, sizeMetres);
+                    heights[z, x] = Flatten(worldX, worldZ, land * Falloff(worldX, worldZ, sizeMetres), sites);
                 }
             }
 
             return heights;
+        }
+
+        /// <summary>
+        /// The height a point ends up at once every building's shelf has had its say.
+        /// <para>
+        /// Sites are applied in order and each one takes the height it wants, so two that overlap
+        /// leave the later one's shelf intact rather than averaging into a shelf that is level with
+        /// neither building. Overlapping sites are a level-design mistake rather than a case to
+        /// support, and this way it is a visible one.
+        /// </para>
+        /// </summary>
+        private static float Flatten(float worldX, float worldZ, float height,
+                                     IReadOnlyList<CastleSite> sites)
+        {
+            if (sites == null) return height;
+
+            for (int index = 0; index < sites.Count; index++)
+            {
+                CastleSite site = sites[index];
+                if (site.Touches(worldX, worldZ)) height = site.Reshape(worldX, worldZ, height);
+            }
+
+            return height;
+        }
+
+        /// <summary>
+        /// The highest the land gets inside a circle, in the heightmap's 0..1.
+        /// <para>
+        /// What a castle's shelf height is chosen from: putting the shelf at the top of what is
+        /// already there turns the hill the noise happened to make into the hill the castle stands
+        /// on, instead of stamping a plateau through the side of it.
+        /// </para>
+        /// </summary>
+        public static float HighestWithin(Vector2 centre, float radius, float sizeMetres, int seed,
+                                          int samples = 64)
+        {
+            float highest = 0f;
+
+            for (int ring = 0; ring <= samples; ring++)
+            {
+                for (int step = 0; step < samples; step++)
+                {
+                    float distance = radius * ring / samples;
+                    float angle = step / (float)samples * Mathf.PI * 2f;
+                    float x = centre.x + Mathf.Cos(angle) * distance;
+                    float z = centre.y + Mathf.Sin(angle) * distance;
+
+                    float hills = ValueNoise.Fractal(x / HillSize, z / HillSize, seed, 4, 0.5f);
+                    float detail = ValueNoise.Fractal(x / DetailSize, z / DetailSize, seed + 101, 3, 0.45f);
+                    float land = Mathf.Lerp(hills, detail, DetailWeight);
+
+                    highest = Mathf.Max(highest, land * Falloff(x, z, sizeMetres));
+                }
+            }
+
+            return highest;
         }
 
         /// <summary>

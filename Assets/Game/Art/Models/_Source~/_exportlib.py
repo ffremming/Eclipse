@@ -114,7 +114,23 @@ def _keep_only(names):
     return len(doomed)
 
 
-def export(src, dst, keep_armature=False, keep=None):
+def rename(objects=None, materials=None):
+    """Rename objects and materials in the open file, from `{old: new}` dicts.
+
+    For a `prepare` hook. A name that is not in the file stops the export
+    rather than being skipped: the artist renaming a part is exactly when a
+    builder that looks the part up by its new name would go quietly wrong.
+    """
+    for table, label, renames in ((bpy.data.objects, "object", objects or {}),
+                                  (bpy.data.materials, "material", materials or {})):
+        missing = set(renames) - {item.name for item in table}
+        if missing:
+            raise SystemExit("No %s named %s in the file" % (label, ", ".join(sorted(missing))))
+        for old, new in renames.items():
+            table[old].name = new
+
+
+def export(src, dst, keep_armature=False, keep=None, prepare=None):
     """Open `src`, export it to `dst`, and never write back to `src`.
 
     `keep_armature` is the one real decision per model. Keep the rig when
@@ -126,6 +142,13 @@ def export(src, dst, keep_armature=False, keep=None):
     `keep` names the objects to ship when the source is a COMPONENT file rather
     than a model — see `_keep_only`. Omit it for a model file, whose objects are
     already exactly the model.
+
+    `prepare` is called with no arguments once the file is open and filtered,
+    before anything is exported. It is where a model gives its objects and
+    materials the names Unity will see, because the artist's own names
+    ("Cylinder.001", "Material.002") say nothing about what a part is, and a
+    builder that has to pick a material per part can only do it by name. The
+    renames are in memory only: nothing here ever saves the .blend.
     """
     if not os.path.exists(src):
         raise SystemExit("No model at %s" % src)
@@ -135,6 +158,9 @@ def export(src, dst, keep_armature=False, keep=None):
     if keep is not None:
         print("  keeping %d object(s), dropped %d other variation object(s)"
               % (len(keep), _keep_only(keep)))
+
+    if prepare is not None:
+        prepare()
 
     localised = _localise_materials()
 

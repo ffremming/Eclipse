@@ -13,7 +13,7 @@
 // the length of a swing, which lets the base layer's own idle and run own the upper body the rest
 // of the time.
 //
-// Shared by the player and the goblins because they wear the same controller.
+// Shared by the player and the enemies because they wear the same controller.
 using UnityEngine;
 
 namespace SpaceGame.Characters

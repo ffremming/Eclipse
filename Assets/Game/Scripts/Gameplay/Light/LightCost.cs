@@ -7,7 +7,7 @@ namespace SpaceGame.Gameplay
     /// <para>
     /// One asset shared by everything that counts blows in orbs — the player's health, which loses
     /// that many, and every creature that drops them when hurt. Two copies of the thresholds would
-    /// let a goblin shed orbs for a hit the player's lantern counts as smaller, and nobody would see
+    /// let an enemy shed orbs for a hit the player's lantern counts as smaller, and nobody would see
     /// why the two disagreed.
     /// </para>
     /// </summary>

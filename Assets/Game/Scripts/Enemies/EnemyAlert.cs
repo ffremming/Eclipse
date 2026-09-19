@@ -1,7 +1,7 @@
 // "He's over here!"
 //
 // The one piece of shared state the enemies have. An enemy that notices the player shouts, and
-// every enemy within earshot goes looking for a fight — which is what turns four goblins standing
+// every enemy within earshot goes looking for a fight — which is what turns four creatures standing
 // near each other into a group that reacts as one.
 //
 // A registry rather than a Physics.OverlapSphere because the thing being searched for is always an

@@ -14,7 +14,7 @@ namespace SpaceGame.Enemies
         public float AttackCooldown;
 
         /// <summary>
-        /// How far from camp it will chase before giving up. This is what stops one goblin
+        /// How far from camp it will chase before giving up. This is what stops one creature
         /// following you across the whole map and leaving its camp undefended.
         /// </summary>
         public float LeashRadius;
@@ -40,14 +40,14 @@ namespace SpaceGame.Enemies
         /// <summary>Metres per second while closing on the target. Also what full throttle means to the animator.</summary>
         public float ChaseSpeed;
 
-        /// <summary>Sensible values for a melee goblin, and what EnemyAgent's Inspector defaults to.</summary>
+        /// <summary>Sensible values for a melee creature, and what EnemyAgent's Inspector defaults to.</summary>
         public static EnemySettings Default => new EnemySettings
         {
             WalkSpeed = 3.5f,
             ChaseSpeed = 3.5f,
             AttackRange = 2.2f,
             AttackCooldown = 1.4f,
-            LeashRadius = 30f,
+            LeashRadius = 70f,
             AggroMemory = 5f,
             WanderRadius = 12f,
             WanderPause = 2f,

@@ -1,4 +1,4 @@
-// One enemy: the only behaviour component a hostile goblin needs.
+// One enemy: the only behaviour component a hostile creature needs.
 //
 // It does three things each tick — gather what can be sensed, ask EnemyBrain what to do, carry the
 // answer out — and the middle one is where all the decisions live. Nothing here chooses anything,
@@ -24,8 +24,10 @@ namespace SpaceGame.Enemies
         [SerializeField] private EnemyBase home;
 
         [Header("Sight")]
-        [Tooltip("How far it can see.")]
-        [SerializeField] private float sightRange = 18f;
+        [Tooltip("How far it can see. Far enough that a camp is a place you are spotted crossing " +
+                 "open ground towards, not one you walk to the edge of unnoticed — so the fight " +
+                 "starts while there is still room to choose how to take it.")]
+        [SerializeField] private float sightRange = 45f;
 
         [Tooltip("Half its field of view, in degrees. 70 gives a believable forward cone you can " +
                  "flank; raise it towards 180 for something that sees all round.")]
@@ -45,7 +47,7 @@ namespace SpaceGame.Enemies
 
         [Header("Hearing")]
         [Tooltip("How far its shout carries when it notices the player. This is what makes a camp " +
-                 "react together rather than one goblin at a time.")]
+                 "react together rather than one of them at a time.")]
         [SerializeField] private float shoutRadius = 14f;
 
         [Header("Behaviour")]
@@ -62,8 +64,11 @@ namespace SpaceGame.Enemies
         [Tooltip("Seconds between swings.")]
         [SerializeField] private float attackCooldown = 1.4f;
 
-        [Tooltip("How far from camp it will chase before giving up and walking back.")]
-        [SerializeField] private float leashRadius = 30f;
+        [Tooltip("How far from camp it will chase before giving up and walking back. Must stay " +
+                 "clear of the sight range: a leash shorter than what the creature can see snaps " +
+                 "mid-chase, and a camp that spots the player at forty metres then turns round at " +
+                 "thirty never reaches anyone.")]
+        [SerializeField] private float leashRadius = 70f;
 
         [Tooltip("Seconds it stays angry after losing sight of the player.")]
         [SerializeField] private float aggroMemory = 5f;

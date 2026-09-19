@@ -44,13 +44,23 @@ namespace SpaceGame.EditorTools
         private const float AshLifetime = 14f;
 
         /// <summary>
-        /// What is left of the sun's light with the disc in the way. Pulled towards the ring's red
-        /// rather than left neutral, so the little light the world does get agrees with the sky it
-        /// comes from. It exists to keep silhouettes readable, not to light anything — brighter
-        /// than this and the player's own light stops being the thing that matters.
+        /// What is left of the sun's light with the disc in the way: nothing at all.
+        /// <para>
+        /// Zero, not merely low. The eclipse is total, so the directional light contributes no
+        /// light to the world — everything the player can see is the ambient trilight and whatever
+        /// they are carrying, which is the point of the game. A sun with even a little intensity in
+        /// it lights every surface on the island evenly and quietly undoes that.
+        /// </para>
+        /// <para>
+        /// The colour is kept, and is not dead weight: it is the colour the light is still set to,
+        /// so the moment <see cref="SpaceGame.Castle.Lightfall"/> starts raising the intensity the
+        /// first light to reach the ground is the eclipse's red rather than a neutral white that
+        /// belongs to no sky. <c>WorldAtmosphere</c> reads both off the light itself as the
+        /// blend's starting point.
+        /// </para>
         /// </summary>
         private static readonly Color SunColour = new Color(0.50f, 0.26f, 0.22f);
-        private const float SunIntensity = 0.18f;
+        private const float SunIntensity = 0f;
 
         public static void Build(Transform sun)
         {

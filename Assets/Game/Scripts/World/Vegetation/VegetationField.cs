@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -40,7 +41,60 @@ namespace SpaceGame.Vegetation
         [Tooltip("How far a plant leans with the slope: 0 stands upright, 1 follows the ground normal.")]
         [SerializeField, Range(0f, 1f)] private float alignToGround = 0.5f;
 
+        [Tooltip("Ground that is kept bare — the castles and anything else built on the island. " +
+                 "Without one of these over a building, the planting rays land on its roofs and " +
+                 "battlements and it comes up wearing a forest.")]
+        [SerializeField] private List<Clearing> clearings = new List<Clearing>();
+
         public IReadOnlyList<VegetationLayerAsset> Layers => layers;
+
+        /// <summary>
+        /// A patch of ground nothing is planted on, in world metres on the XZ plane.
+        /// <para>
+        /// Needed because the planting ray cannot tell a building from a hillside: it looks for
+        /// whatever is under a point and plants on it, and a castle is under a great many points.
+        /// Filtering by what the ray HIT would be the other way to do it, and it is worse — it
+        /// leaves the courtyard planted, which is ground, and the player finds a forest inside the
+        /// castle they just unlocked.
+        /// </para>
+        /// </summary>
+        [Serializable]
+        public struct Clearing
+        {
+            [Tooltip("Centre, in world metres on the XZ plane.")]
+            public Vector2 Centre;
+
+            [Tooltip("How far out the ground is kept bare, in metres.")]
+            public float Radius;
+
+            public Clearing(Vector2 centre, float radius)
+            {
+                Centre = centre;
+                Radius = radius;
+            }
+
+            public bool Contains(Vector2 point) =>
+                (point - Centre).sqrMagnitude <= Radius * Radius;
+        }
+
+        /// <summary>
+        /// Replaces the ground this field keeps bare. Called by the castle builder, so moving a
+        /// castle moves the clearing under it without anyone having to remember to.
+        /// </summary>
+        public void SetClearings(IEnumerable<Clearing> bare)
+        {
+            clearings.Clear();
+            if (bare != null) clearings.AddRange(bare);
+        }
+
+        /// <summary>Whether this point is on ground the field keeps bare.</summary>
+        public bool IsCleared(Vector2 worldXZ)
+        {
+            for (int index = 0; index < clearings.Count; index++)
+                if (clearings[index].Contains(worldXZ)) return true;
+
+            return false;
+        }
 
         /// <summary>
         /// Every plant this field wants, for every layer, already dropped onto the ground. Layers
@@ -77,6 +131,11 @@ namespace SpaceGame.Vegetation
             plant = default;
 
             Vector3 above = transform.position + new Vector3(placement.X, rayHeight, placement.Z);
+
+            // Before the raycast rather than after: a cleared point is refused whatever is under
+            // it, and this is the cheap test of the two.
+            if (IsCleared(new Vector2(above.x, above.z))) return false;
+
             if (!Physics.Raycast(above, Vector3.down, out RaycastHit hit, rayHeight * 2f,
                                  groundMask, QueryTriggerInteraction.Ignore))
             {

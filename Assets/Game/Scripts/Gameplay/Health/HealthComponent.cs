@@ -75,6 +75,33 @@ namespace SpaceGame.Gameplay
             if (currentHealth <= 0) OnDeath?.Invoke();
         }
     
+        /// <summary>
+        /// Whether <paramref name="points"/> can be paid out of this health right now. False for a
+        /// price that would empty it: a cost is something the owner chooses to pay, and a choice
+        /// that kills you the moment you make it is a trap rather than a price.
+        /// </summary>
+        public bool CanSpend(int points) => points > 0 && currentHealth > points;
+
+        /// <summary>
+        /// Pays <paramref name="points"/> out of this health, as the player's swing pays for itself
+        /// in light. Does nothing unless <see cref="CanSpend"/> allows it, so a caller that checked
+        /// first can spend without checking again.
+        /// <para>
+        /// Points, not damage: a cost is already counted in the units the health is kept in, and
+        /// putting it through <see cref="Damage(int, Transform)"/> would run it past the light cost
+        /// and charge one orb for every point meant to be spent. Silent for the same reason — no
+        /// <see cref="OnDamage"/>, so spending does not throw orbs on the floor, flash the screen
+        /// red or tell the enemies you were hurt. What it costs shows in the lantern going down,
+        /// which is where the player is already looking.
+        /// </para>
+        /// </summary>
+        public void Spend(int points)
+        {
+            if (!CanSpend(points)) return;
+
+            currentHealth -= points;
+        }
+
         // Full restore for respawns. Heal() can't be used for this: overkill damage
         // drives currentHealth below zero, and Heal clamps the applied amount to
         // `amount`, so healing by maxHealth after a -50 hit comes back at half health

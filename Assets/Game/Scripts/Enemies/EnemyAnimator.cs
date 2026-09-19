@@ -1,7 +1,7 @@
-// Drives the Goblin animator from an enemy's movement.
+// Drives the Creature animator from an enemy's movement.
 //
 // Separate from EnemyAgent because it is the one part tied to a specific animator controller: the
-// parameter names below are the Goblin controller's, shared with the player. Swap an enemy onto a
+// parameter names below are the Creature controller's, shared with the player. Swap an enemy onto a
 // different rig and this is the only file that has to change.
 //
 // The velocity arrives in world space and is turned into the controller's local SpeedX/SpeedY pair,
@@ -13,11 +13,11 @@
 //
 // It also writes MoveAnimSpeed, which the controller multiplies the Move state by and defaults to
 // zero. Left unwritten the blend tree still picks the right clip and then plays it at a standstill,
-// so a goblin glides across the ground in a frozen stride.
+// so a creature glides across the ground in a frozen stride.
 //
-// Swings come from the same MeleeSwingSequence the player's do, so a goblin that keeps pressing its
-// attack escalates through the chain the way the player does, and one that loses the fight starts
-// over from the opening swing.
+// Swings come from the same MeleeSwingSequence the player's do, so a creature that keeps pressing
+// its attack escalates through the chain the way the player does, and one that loses the fight
+// starts over from the opening swing.
 using SpaceGame.Characters;
 using SpaceGame.Gameplay;
 using UnityEngine;
@@ -44,7 +44,7 @@ namespace SpaceGame.Enemies
         [SerializeField] private int swingVariations = 5;
 
         [Tooltip("Longest gap between two swings that still continues the combo. Must be longer than " +
-                 "the agent's attack cooldown, or every swing opens a fresh chain and the goblin " +
+                 "the agent's attack cooldown, or every swing opens a fresh chain and the creature " +
                  "only ever plays its opening clip.")]
         [SerializeField] private float chainWindow = 2.5f;
 
@@ -54,7 +54,7 @@ namespace SpaceGame.Enemies
 
         [Tooltip("Ground speed the Move tree's run clip was authored to travel at — the player's " +
                  "runClipSpeed, because it is the same tree. Above it the walk cycle plays " +
-                 "proportionally faster, so a goblin set to outrun its clip does not skate.")]
+                 "proportionally faster, so a creature set to outrun its clip does not skate.")]
         [SerializeField] private float runClipSpeed = 4.92f;
 
         private MeleeSwingSequence swings;
@@ -66,7 +66,7 @@ namespace SpaceGame.Enemies
             if (health == null) health = GetComponentInParent<HealthComponent>();
 
             // No cooldown of its own: EnemyAgent already paces its swings, and a second gate here
-            // would only be a way for the two to disagree about when the goblin may attack.
+            // would only be a way for the two to disagree about when the creature may attack.
             swings = new MeleeSwingSequence(swingVariations, cooldown: 0f, chainWindow);
         }
 
@@ -86,7 +86,7 @@ namespace SpaceGame.Enemies
 
         private bool Ready => animator != null && animator.runtimeAnimatorController != null;
 
-        // Only the Goblin controller multiplies its walk by MoveAnimSpeed. A rig that does not
+        // Only the Creature controller multiplies its walk by MoveAnimSpeed. A rig that does not
         // declare it, like the dragon's, would have Unity warn about the missing parameter on every
         // frame, so it is asked once and remembered. Lazily, because the animator may sit on a child
         // that is still inactive at Awake and has no parameters to list yet.

@@ -31,7 +31,7 @@ namespace SpaceGame.Enemies
 
         /// <summary>
         /// It just noticed the target itself, so it should tell the neighbours. True for exactly one
-        /// tick, and never as a result of having heard someone else — otherwise a camp of goblins
+        /// tick, and never as a result of having heard someone else — otherwise a camp of them
         /// would shout each other awake in a loop that never settles.
         /// </summary>
         public bool ShoutAlert;

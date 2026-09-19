@@ -28,9 +28,9 @@ namespace SpaceGame.EditorTools
         private const string ItemFolder = "Assets/Game/Resources/Items/Artifacts";
 
         /// <summary>
-        /// Hotbar order, slot 1 upwards. The four weapons take the keys the player will actually
-        /// reach for mid-fight; the torch sits past them because it is switched on once and then
-        /// left alone, not swapped to under pressure.
+        /// Hotbar order, slot 1 upwards. The five weapons take the keys the player will actually
+        /// reach for mid-fight; the torch and the lantern sit past them because each is switched on
+        /// once and then left alone, not swapped to under pressure.
         /// </summary>
         private static readonly string[] Loadout =
         {
@@ -38,8 +38,22 @@ namespace SpaceGame.EditorTools
             "LightKhopesh",
             "LightAxe",
             "LightChain",
+            "LightBoomerang",
             "Torch",
+            "Lantern",
         };
+
+        /// <summary>
+        /// Slots left free for what the player finds in the world. Two castle keys need two; the
+        /// third is headroom for the next thing that is picked up rather than started with.
+        /// </summary>
+        private const int SpareSlots = 3;
+
+        /// <summary>
+        /// How long the hotbar can usefully get: <c>PlayerInputManager</c> binds Hotbar1..10, and a
+        /// slot past the last bound key is one the player has no way to select.
+        /// </summary>
+        private const int BoundHotbarKeys = 10;
 
         [MenuItem("Tools/Eclipse/Items/Equip Starting Loadout")]
         private static void Equip()
@@ -80,9 +94,18 @@ namespace SpaceGame.EditorTools
             SerializedObject serialized = new SerializedObject(inventory);
 
             // The hotbar has to be at least as long as the loadout, or the items past the end are
-            // dropped on the floor by PlayerInventory with nothing said about it.
-            serialized.FindProperty("inventorySize").intValue =
-                Mathf.Max(serialized.FindProperty("inventorySize").intValue, items.Count);
+            // dropped on the floor by PlayerInventory with nothing said about it — and longer than
+            // it by enough to hold what the player picks up.
+            //
+            // Sized exactly to the loadout, the hotbar starts full, and a full hotbar makes
+            // TryAddItem return false for everything: the castle keys could not be picked up at
+            // all, so the doors they open could never be opened. Nothing reports that. The pickup
+            // simply does not respond, which in a game with no HUD is indistinguishable from a key
+            // that is not interactive.
+            serialized.FindProperty("inventorySize").intValue = Mathf.Clamp(
+                items.Count + SpareSlots,
+                serialized.FindProperty("inventorySize").intValue,
+                BoundHotbarKeys);
 
             SerializedProperty starting = serialized.FindProperty("startingItems");
             starting.arraySize = items.Count;

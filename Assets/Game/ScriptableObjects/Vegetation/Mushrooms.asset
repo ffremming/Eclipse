@@ -12,269 +12,269 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e1e99aa2316e45538ae2ac76bbd71a6, type: 3}
   m_Name: Mushrooms
   m_EditorClassIdentifier: SpaceGame.Vegetation::SpaceGame.Vegetation.VegetationLayerAsset
-  mode: 1
+  mode: 2
   clearingRadius: 0
   count: 0
-  minDistance: 0
+  minDistance: 2.2
   patchSize: 16
   coverage: 0.14
   spacing: 2.5
   positionJitter: 0.4
   noiseOctaves: 3
   noisePersistence: 0.45
-  clusterCount: 0
-  clusterRadius: 20
-  perCluster: 0
+  clusterCount: 30
+  clusterRadius: 9
+  perCluster: 5
   items:
-  - prefab: {fileID: 5866392483120234812, guid: 4cd2951ef65224dc892ea84e8cbbf72f, type: 3}
+  - prefab: {fileID: 5626901732756272721, guid: 35a774d2d9f274b69888a0ad70450311, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 5759573673192206435, guid: 44bfef671a12b493794ec705aef69673, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 6735205664539988192, guid: 9389a299af3fb47f784b565bcf0b2e5f, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 996987025267816276, guid: 0a91bf8c0a0d1449ab0832dab5b2c7ee, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 208283458453864407, guid: b4b100e654b264f359ea811acbc8e34a, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 3248641031852587132, guid: 77c654c7f6d6347639a4d018ed7e8bb4, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 6203607896961614644, guid: 9c16c0854c1e14ee581bad0b51406376, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 3934297177240721545, guid: 8d6958574854b4769b2290f2f90d4181, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 3319206895709298342, guid: 44703f072c79d4cd9b24755241503e9a, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 3716104481898208763, guid: 6ca1755dc788647b589c9714a9e2b94a, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 2492702054398960322, guid: 02a16f3fcb8a042a2b6776eec054e637, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 5288357522238769690, guid: 8e2f0c836ee3543a081de1dc40b83cbe, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 2835785377007263318, guid: 7cd71514fc2ad47278cd1f58bbd8466b, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 1707302018305857305, guid: add28f742f0eb48be806070f5c1e1a82, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 902849449821901815, guid: ca20e0be0aab745afa278463aba75d88, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 3738053674615022170, guid: 590d7acc1d58f48d0bedfa6aa41bf06b, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 2837246169774518940, guid: e079e05e3618943c5b38c5de89fb3756, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 4996888051467830001, guid: 877b4b0e11b6d4479aeebc81abb0b29c, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 9180302390955673629, guid: 56c8e6307edd94427a2b288fdd817e02, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 5094736795911412420, guid: a283ceec918f7468b92b8f9c30ed3238, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 180519286723752317, guid: 46964918b62044007b415a94c190400b, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 6542989193318803888, guid: bab49ab7651264c4eab3034c75ef5892, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 8633259047738213530, guid: 55fa2f2c9340b490ca5b95f90eb4b856, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 7135204522021059532, guid: ff6a990d2af314a32bded79fa01288dc, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 3633722650627834599, guid: 7b7f059b0588d4822946a497d508f626, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 4516828589856187108, guid: e8b9fe7758a67430a8ba8b402031320c, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 7794917178450243395, guid: 8a90912743d284b25b9d42479a9985fd, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 5817917291833474857, guid: b2f3f4762c75b49ebbb77577f856c682, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 4782393687000924725, guid: 7e248aae1ab214219bf931a384b92afd, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 5106818679248520364, guid: 378e83ae65722457a875d0ce9e4884c3, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 2400168334859982441, guid: d1f648453590f484d873e6454add529b, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 2757298926137599819, guid: f7cf886a3bd3b4dc98dc7a99b78a191e, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 5952149332423984116, guid: 1dd6cfe8ca3b04b5286a4b98fd4c3ee4, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
-  - prefab: {fileID: 7014843268049902206, guid: 50e553365feae41b6a3cb30a0b560b73, type: 3}
+      Max: 0.1
+  - prefab: {fileID: 6410599517915162239, guid: 2ddea8172571345918e5bc7288ffa7d7, type: 3}
     weight: 1
     scale:
-      Min: 2
-      Max: 4
+      Min: 3
+      Max: 8
     yaw:
       Min: 0
       Max: 360
     tilt:
       Min: 0
-      Max: 10
+      Max: 4
     sink:
       Min: 0
-      Max: 0.03
+      Max: 0.1

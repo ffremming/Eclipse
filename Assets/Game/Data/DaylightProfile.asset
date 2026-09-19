@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e2eacbe75fba4a8d893f1beab9fb597, type: 3}
+  m_Name: DaylightProfile
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Castle.DaylightProfile
+  FogColor: {r: 0.62, g: 0.68, b: 0.78, a: 1}
+  FogDensity: 0.0009
+  FogBaseHeight: 6
+  FogFalloff: 0.02
+  FogStart: 60
+  AmbientSky: {r: 0.42, g: 0.48, b: 0.6, a: 1}
+  AmbientEquator: {r: 0.34, g: 0.34, b: 0.33, a: 1}
+  AmbientGround: {r: 0.2, g: 0.18, b: 0.16, a: 1}
+  SunColour: {r: 1, g: 0.96, b: 0.88, a: 1}
+  SunIntensity: 2.1
+  Zenith: {r: 0.23, g: 0.4, b: 0.72, a: 1}
+  Horizon: {r: 0.66, g: 0.74, b: 0.84, a: 1}
+  Disc: {r: 1, g: 0.97, b: 0.86, a: 1}
+  RingIntensity: 0
+  CoronaStrength: 0
+  BloodSky: 0
+  PallStrength: 0.15
+  CloudCoverage: 0.34
+  CloudBody: {r: 0.86, g: 0.88, b: 0.92, a: 1}
+  CloudUndertoneStrength: 0

@@ -6,10 +6,12 @@ namespace SpaceGame.Gameplay
     /// Throws orbs of light out of whoever it sits on each time they are hurt — as many as the blow
     /// was worth.
     /// <para>
-    /// The same component on the player and on an enemy. What differs is only where the light comes
-    /// from: the player's health is the light and loses those orbs, an enemy keeps its health and
-    /// sheds the orbs as a reaction to the blow. Either way the orbs on the ground are the light that
-    /// was knocked loose, and the player can take it back.
+    /// On the creatures and not on the player, which is the whole shape of the light economy: light
+    /// is won off an enemy and never off yourself. The player's lantern is a sink — what a blow
+    /// takes out of it is gone the moment it is taken, and what a swing costs is gone the moment it
+    /// is paid — so every orb on the ground came out of something the player hit
+    /// (<c>GDC-L1-SYS-0008</c>). Giving the player one of these back would close the loop and hand
+    /// them their own light to walk over, which is how being hit stopped meaning anything.
     /// </para>
     /// </summary>
     [RequireComponent(typeof(HealthComponent))]

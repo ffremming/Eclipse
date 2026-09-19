@@ -25,10 +25,6 @@ namespace SpaceGame.EditorTools
         private const string ItemFolder = "Assets/Game/Resources/Items/Artifacts";
         private const string ArcMaterialPath = "Assets/Game/Art/Materials/Light/LightArc.mat";
 
-        private const string SwordModel = "Assets/Game/Art/Models/Weapons/Sword/sword.fbx";
-        private const string KhopeshModel = "Assets/Game/Art/Models/Weapons/Khopesh/khopesh.fbx";
-        private const string AxeModel = "Assets/Game/Art/Models/Weapons/Axe/axe.obj";
-
         /// <summary>What a dropped weapon comes to rest on. The mask every artifact uses.</summary>
         private const int GroundLayerMask = 128;
 
@@ -50,18 +46,22 @@ namespace SpaceGame.EditorTools
                 return;
             }
 
+            // How each blade is held and how big it is lives in BladeModels, because it belongs to
+            // the mesh: the enemies carry the same three models and hold them the same way. What
+            // is chosen here is what the player's version of each one DOES.
+
             // Fast, tight and light. The baseline the other two are felt against.
-            Build("LightSword", SwordModel, arc, length: 0.95f, handle: HandleEnd.LowEnd, gripAlong: 0.16f,
+            Build("LightSword", BladeModels.Sword, arc,
                   reach: 1.6f, arcRadius: 1.2f, damage: 22, swing: 0.36f, trailWidth: 0.34f, trailTime: 0.22f);
 
             // A curved hook of a blade, so it is the short quick one — less reach than the sword,
             // faster, and the widest trail because the curve is what the eye follows.
-            Build("LightKhopesh", KhopeshModel, arc, length: 0.72f, handle: HandleEnd.HighEnd, gripAlong: 0.15f,
+            Build("LightKhopesh", BladeModels.Khopesh, arc,
                   reach: 1.35f, arcRadius: 1.35f, damage: 19, swing: 0.30f, trailWidth: 0.42f, trailTime: 0.24f);
 
             // Slower, wider and harder. These numbers ARE the difference between an axe and a
             // sword — there is no axe class, only an axe prefab.
-            Build("LightAxe", AxeModel, arc, length: 0.88f, handle: HandleEnd.HighEnd, gripAlong: 0.30f,
+            Build("LightAxe", BladeModels.Axe, arc,
                   reach: 1.5f, arcRadius: 1.7f, damage: 38, swing: 0.58f, trailWidth: 0.52f, trailTime: 0.26f);
 
             AssetDatabase.SaveAssets();
@@ -69,12 +69,12 @@ namespace SpaceGame.EditorTools
                       "Run Tools/Generate All Item Icons to give them icons.");
         }
 
-        private static void Build(string name, string modelPath, Material arc, float length,
-                                  HandleEnd handle, float gripAlong, float reach, float arcRadius,
-                                  int damage, float swing, float trailWidth, float trailTime)
+        private static void Build(string name, BladeModel model, Material arc, float reach,
+                                  float arcRadius, int damage, float swing, float trailWidth, float trailTime)
         {
             GameObject root = new GameObject(name);
-            MountedModel mounted = ModelMount.Mount(root.transform, modelPath, length, handle, gripAlong);
+            MountedModel mounted = ModelMount.Mount(root.transform, model.Path, model.Length,
+                                                    model.Handle, model.GripAlong);
             Transform tip = mounted.Tip;
 
             // The blade must not cast shadows from the light sitting inside it, or it throws a wedge
@@ -96,7 +96,7 @@ namespace SpaceGame.EditorTools
             WireFloat(blade, "swingDuration", swing);
             WireInt(blade, "damage", damage);
 
-            Finish(root, name, length, mounted.GripPoint);
+            Finish(root, name, model.Length, mounted.GripPoint, model.HoldRotation);
         }
 
         /// <summary>
@@ -135,7 +135,8 @@ namespace SpaceGame.EditorTools
             return trail;
         }
 
-        private static void Finish(GameObject root, string name, float holdSize, Vector3 gripPoint)
+        private static void Finish(GameObject root, string name, float holdSize, Vector3 gripPoint,
+                                   Vector3 holdRotation)
         {
             SphereCollider collider = root.AddComponent<SphereCollider>();
             collider.radius = 0.16f;
@@ -156,6 +157,10 @@ namespace SpaceGame.EditorTools
             Wire(itemGrip, "gripPoint", grip.transform);
             WireEnum(itemGrip, "holdStyle", (int)ItemGrip.HoldStyle.OneHanded);
             WireFloat(itemGrip, "holdSize", holdSize);
+
+            SerializedObject gripFields = new SerializedObject(itemGrip);
+            SerializedFields.SetVector3(gripFields, "rotationOffset", holdRotation);
+            gripFields.ApplyModifiedPropertiesWithoutUndo();
 
             root.AddComponent<PickupableItem>();
 

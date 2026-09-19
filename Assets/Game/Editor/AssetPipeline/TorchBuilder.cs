@@ -29,8 +29,14 @@ namespace SpaceGame.EditorTools
 
         private const string FlameShader = "SpaceGame/Light/LightFlame";
 
-        /// <summary>Length of the torch once held, in metres.</summary>
+        /// <summary>Length of the torch's shaft once held, in metres.</summary>
         private const float TorchLength = 0.62f;
+
+        /// <summary>
+        /// Rotation in the hand that stands the torch up and a little forward as the player idles,
+        /// so the flame reads above the fist rather than beside the wrist.
+        /// </summary>
+        private static readonly Vector3 TorchHoldRotation = new Vector3(318.13f, 351.69f, 352.43f);
 
         /// <summary>The end of the model's shaft that is the handle, as authored.</summary>
         private const HandleEnd TorchHandle = HandleEnd.LowEnd;
@@ -333,7 +339,14 @@ namespace SpaceGame.EditorTools
             ItemGrip itemGrip = root.AddComponent<ItemGrip>();
             Wire(itemGrip, "gripPoint", grip.transform);
             WireEnum(itemGrip, "holdStyle", (int)ItemGrip.HoldStyle.OneHanded);
-            WireFloat(itemGrip, "holdSize", TorchLength);
+
+            // The hand sizes the whole item, flame included, so the shaft only comes out at
+            // TorchLength when the size asked for is the shaft plus the flame above it.
+            WireFloat(itemGrip, "holdSize", TorchLength + FlameHeight);
+
+            SerializedObject gripFields = new SerializedObject(itemGrip);
+            SerializedFields.SetVector3(gripFields, "rotationOffset", TorchHoldRotation);
+            gripFields.ApplyModifiedPropertiesWithoutUndo();
 
             root.AddComponent<PickupableItem>();
 

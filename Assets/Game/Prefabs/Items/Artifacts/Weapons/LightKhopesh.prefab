@@ -181,7 +181,7 @@ MonoBehaviour:
   gripPoint: {fileID: 7645127383008086529}
   hand: 0
   holdStyle: 2
-  rotationOffset: {x: 0, y: 0, z: 0}
+  rotationOffset: {x: 340.29, y: 348.65, z: 354.02}
   positionOffset: {x: 0, y: 0, z: 0}
   holdSize: 0.72
   packSize: 0

@@ -46,7 +46,7 @@ namespace SpaceGame.EditorTools
 
         /// <summary>
         /// Blade height and width as multiples of the prefab, whose blades are 40-50 cm. These stand
-        /// 1.2-2.2 m, over a goblin's head and the camera behind it, so a player in the grass is
+        /// 1.2-2.2 m, over a creature's head and the camera behind it, so a player in the grass is
         /// hidden and not merely partly covered. Width grows more slowly than height, or the
         /// blades would turn into paddles.
         /// </summary>

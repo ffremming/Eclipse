@@ -1,12 +1,12 @@
 // The player's bare-handed swing: the fighting game's core verb, on the Use button.
 //
 // Bound to Use rather than to a new action because Use is already the "do the thing in front of
-// you" button, and the goblin's sword is part of its mesh rather than an inventory item — so with
+// you" button, and an enemy's blade is put in its hand by EnemyGear rather than equipped — so with
 // nothing equipped the button has nothing else to do. An equipped item still wins: the hotbar item
 // is what the player deliberately put in their hand.
 //
 // This decides WHEN the player swings. What a swing connects with belongs to MeleeStrike, which the
-// enemies drive from their own brains off the very same component — so the player and the goblins
+// enemies drive from their own brains off the very same component — so the player and the enemies
 // fighting them resolve a hit through one piece of code rather than two that drift apart.
 using System;
 using SpaceGame.Core;
@@ -52,6 +52,11 @@ namespace SpaceGame.Characters
                  "chain escalates towards the finisher; let it lapse and the next swing opens a " +
                  "fresh chain. Must be longer than the cooldown or the chain can never advance.")]
         [SerializeField] private float chainWindow = 1.1f;
+
+        [Tooltip("Orbs of light one swing burns. Swinging is the player's only way to spend light " +
+                 "by choice, which is what makes a miss cost something and a fight worth leaving. " +
+                 "Zero gives the swings away free, as they were before the lantern was a resource.")]
+        [SerializeField] private int swingLightCost = 1;
 
         private PlayerInputManager input;
         private MeleeSwingSequence sequence;
@@ -112,20 +117,35 @@ namespace SpaceGame.Characters
         /// NOT fire <see cref="MeleeStrike"/> — calling both would hurt everything in front of the
         /// player twice per press.
         /// </para>
+        /// <para>
+        /// Costs light, so a caller that gets false back may have been refused for want of it
+        /// rather than for the cooldown.
+        /// </para>
         /// </summary>
         public bool TryPlaySwing()
         {
             if (health != null && !health.Alive) return false;
             if (animator == null || animator.runtimeAnimatorController == null) return false;
 
+            // Asked before the sequence, because TrySwing consumes a step of the chain the moment
+            // it says yes and a swing refused for want of light must not burn one.
+            if (!CanAffordSwing()) return false;
+
             // Gated through the sequence even when the swing that comes out is contextual, so the
             // kick and the jump attack share one cooldown with the sword rather than giving the
             // player a second attack button by accident.
             if (!sequence.TrySwing(Time.time, out int index)) return false;
 
+            if (health != null) health.Spend(swingLightCost);
+
             Swung?.Invoke(PlayForContext(index));
             return true;
         }
+
+        // The last orb is never spendable, so the player cannot put their own lantern out by
+        // swinging at nothing — dying has to be something an enemy did.
+        private bool CanAffordSwing() =>
+            swingLightCost <= 0 || health == null || health.CanSpend(swingLightCost);
 
         private SwingKind PlayForContext(int index)
         {

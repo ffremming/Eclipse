@@ -24,7 +24,13 @@ namespace SpaceGame.EditorTools
         private const string TerrainDataPath = "Assets/Game/Art/Terrain/NatureWorldTerrain.asset";
         private const string LayerFolder = "Assets/Game/ScriptableObjects/Vegetation";
 
-        private const int Seed = 20260918;
+        /// <summary>
+        /// The one number the whole world comes out of. Public because the camps are placed
+        /// into a scene that already exists as well as during a build, and a camp laid out
+        /// from a different seed than the island it stands on is a camp in a different place
+        /// every time it is placed.
+        /// </summary>
+        public const int Seed = 20260918;
         private const float SizeMetres = 500f;
         private const float HeightMetres = 70f;
         private const int HeightmapResolution = 513;
@@ -59,6 +65,8 @@ namespace SpaceGame.EditorTools
             BuildCamera();
             VegetationField field = BuildField(terrain);
             AtmosphereSetup.Build(sun);
+            CastleBuilder.Build(terrain, SizeMetres, HeightMetres, Seed);
+            EnemyCampBuilder.Build(terrain, Seed);
 
             TerrainGrassDetail.Paint(terrain, PlantingFloor, Seed);
 
@@ -105,7 +113,14 @@ namespace SpaceGame.EditorTools
 
             data.heightmapResolution = HeightmapResolution;
             data.size = new Vector3(SizeMetres, HeightMetres, SizeMetres);
-            data.SetHeights(0, 0, TerrainShape.Heights(HeightmapResolution, SizeMetres, Seed));
+
+            // The castles' shelves go in with the land, not on top of it afterwards. A flattening
+            // pass over a finished terrain would have to undo the splat map and the planting that
+            // were derived from the old heights, and the vegetation is baked from this terrain
+            // later in this same build — so a hill stamped after the fact would come back with
+            // trees still standing at the height they were planted at.
+            data.SetHeights(0, 0, TerrainShape.Heights(HeightmapResolution, SizeMetres, Seed,
+                                                       CastlePlacement.Sites(SizeMetres, Seed)));
 
             data.terrainLayers = TerrainGroundLayers.Load();
             data.alphamapResolution = AlphamapResolution;

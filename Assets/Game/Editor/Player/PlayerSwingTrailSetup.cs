@@ -2,13 +2,20 @@
 //
 // Three trails: the sword arm, which lights for the slashes and the jump attack, and each leg,
 // which lights for the kick. The legs need no anchors of their own — the knee and the toe already
-// are the two ends of the swing — but the sword does. The goblin's blade is part of its mesh, so
-// there is no bone at its tip; the anchors here are children of the wrist, placed from the sword
-// object that is disabled on the prefab. That object never renders, but its transform still rides
-// the hand and it is the one thing in the rig that knows which way the blade points.
+// are the two ends of the swing — but the sword does, because no bone sits at a blade's tip.
+//
+// Those two anchors used to be placed from the goblin's blade, a disabled copy of the goblin mesh
+// that rode the hand purely so this tool could ask it which way a blade points. The goblin is gone
+// from the game, so the offsets it produced are written down here instead — in the hand's own
+// space, which is what they were being converted into anyway.
 //
 // Idempotent: a second run finds the anchors and components in place and re-asserts the wiring,
 // so it is also how a tuned value in here reaches the prefab.
+//
+// STALE: the bone names below (R_Wrist_Jnt, R_Knee_Jnt, ...) are the old body's. The player wears
+// the Human now, whose bones are named after HumanBodyBones, so this tool cannot find them and
+// refuses to change anything. It wants a pass that asks the Animator for its humanoid bones the
+// way EnemyGear does. That is older than the goblin's removal and is not what removed it.
 //
 // Run from: Tools ▸ Eclipse ▸ Player ▸ Setup Swing Trails
 using System.Linq;
@@ -23,15 +30,15 @@ namespace SpaceGame.EditorTools
         private const string MaterialPath = "Assets/Game/Art/Materials/Light/LightSlash.mat";
         private const string ShaderName = "SpaceGame/Light/LightSlash";
 
-        private const string SwordObject = "Goblins_Sword";
         private const string WristBone = "R_Wrist_Jnt";
         private const string SwordBaseAnchor = "SwordTrailBase";
         private const string SwordTipAnchor = "SwordTrailTip";
 
-        // In the sword mesh's own space, along its long axis: where the hand holds it, and the far
-        // end of the blade. The mesh runs y -0.5 to 0.5 with the grip near the low end.
-        private static readonly Vector3 SwordGrip = new(0.03f, -0.30f, 0f);
-        private static readonly Vector3 SwordTip = new(0.05f, 0.50f, 0f);
+        // In the wrist's own space: where the hand closes on a blade, and where that blade's tip
+        // reaches. Measured off the anchors the old sword mesh produced, so a re-run puts them back
+        // exactly where they have been since they were first placed.
+        private static readonly Vector3 SwordBaseLocal = new(-0.016532293f, 0.030766685f, 0.09522879f);
+        private static readonly Vector3 SwordTipLocal = new(0.09978564f, -0.24730888f, 0.83654183f);
 
         [MenuItem("Tools/Eclipse/Player/Setup Swing Trails")]
         public static void Run()
@@ -50,23 +57,23 @@ namespace SpaceGame.EditorTools
             try
             {
                 var swing = root.GetComponent<PlayerMeleeSwing>();
-                Transform sword = Find(root, SwordObject);
                 Transform wrist = Find(root, WristBone);
                 Transform rightKnee = Find(root, "R_Knee_Jnt");
                 Transform rightToe = Find(root, "R_Toe_Jnt");
                 Transform leftKnee = Find(root, "L_Knee_Jnt");
                 Transform leftToe = Find(root, "L_Toe_Jnt");
 
-                if (swing == null || sword == null || wrist == null ||
+                if (swing == null || wrist == null ||
                     rightKnee == null || rightToe == null || leftKnee == null || leftToe == null)
                 {
-                    Debug.LogError("[PlayerSwingTrailSetup] The player prefab is missing PlayerMeleeSwing, " +
-                                   $"'{SwordObject}' or a knee/toe/wrist bone it needs; nothing was changed.");
+                    Debug.LogError("[PlayerSwingTrailSetup] The player prefab is missing PlayerMeleeSwing " +
+                                   "or a knee/toe/wrist bone it needs; nothing was changed. See the note " +
+                                   "at the top of this file about the bone names.");
                     return;
                 }
 
-                Transform swordBase = EnsureAnchor(wrist, SwordBaseAnchor, sword.TransformPoint(SwordGrip));
-                Transform swordTip = EnsureAnchor(wrist, SwordTipAnchor, sword.TransformPoint(SwordTip));
+                Transform swordBase = EnsureAnchor(wrist, SwordBaseAnchor, SwordBaseLocal);
+                Transform swordTip = EnsureAnchor(wrist, SwordTipAnchor, SwordTipLocal);
 
                 WireTrail(root, swing, material, swordBase, swordTip, SwingKind.Slash | SwingKind.JumpAttack);
                 WireTrail(root, swing, material, rightKnee, rightToe, SwingKind.Kick);
@@ -113,7 +120,7 @@ namespace SpaceGame.EditorTools
             return root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == name);
         }
 
-        private static Transform EnsureAnchor(Transform parent, string name, Vector3 worldPosition)
+        private static Transform EnsureAnchor(Transform parent, string name, Vector3 localPosition)
         {
             Transform anchor = parent.Find(name);
             if (anchor == null)
@@ -122,7 +129,7 @@ namespace SpaceGame.EditorTools
                 anchor.SetParent(parent, false);
             }
 
-            anchor.position = worldPosition;
+            anchor.localPosition = localPosition;
             return anchor;
         }
 

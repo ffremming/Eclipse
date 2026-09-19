@@ -1,6 +1,6 @@
 // The four evasive moves the dash button can produce.
 //
-// The order matters: it is the DodgeIndex the Goblin controller's Any-State transitions compare
+// The order matters: it is the DodgeIndex the Creature controller's Any-State transitions compare
 // against, so renumbering here silently repoints every dodge in the animator.
 namespace SpaceGame.Characters
 {

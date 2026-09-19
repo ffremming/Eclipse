@@ -57,6 +57,10 @@ namespace SpaceGame.Items
                  "of light, for a weapon that already has one and should not gain any other colour.")]
         [SerializeField] private SlashPalette swingPalette = SlashPalette.Spectrum;
 
+        [Tooltip("Whether the player's swing draws its slash of light while this is held. Off for a " +
+                 "weapon that throws its own light, so the only light in a use is the weapon's.")]
+        [SerializeField] private bool leavesSwingLight = true;
+
         [Tooltip("How long one swing takes, in seconds. Also how long the trail is drawn for.")]
         [SerializeField] private float swingDuration = 0.42f;
 
@@ -75,21 +79,31 @@ namespace SpaceGame.Items
         private const int MaxHitsPerSweep = 32;
 
         private readonly Collider[] hitBuffer = new Collider[MaxHitsPerSweep];
-        private float swingT = -1f;
+        private SpaceGame.Characters.SwingFlare swing;
         private MaterialPropertyBlock block;
         private SpaceGame.Characters.PlayerMeleeSwing holderSwing;
 
+        /// <summary>
+        /// Whether the holder's body actually swung on this press. Written by <see cref="Present"/>
+        /// and read by <see cref="CanUse"/>, which is sound because one press runs the two in that
+        /// order and nothing else calls either.
+        /// </summary>
+        private bool bodySwung;
+
         /// <summary>Which colours the light of the player's swing takes while this is held.</summary>
         public SlashPalette SwingPalette => swingPalette;
+
+        /// <summary>Whether the player's swing draws its own slash of light while this is held.</summary>
+        public bool LeavesSwingLight => leavesSwingLight;
 
         /// <summary>How long one swing takes, in seconds. A weapon with its own motion fits it to this.</summary>
         protected float SwingDuration => swingDuration;
 
         /// <summary>0 while idle, 0..1 through a swing. Subclasses read it to shape their own motion.</summary>
-        protected float SwingProgress => swingT < 0f ? 0f : Mathf.Clamp01(swingT / Mathf.Max(swingDuration, 1e-4f));
+        protected float SwingProgress => Swing.Progress;
 
         /// <summary>True between the start of a swing and the end of it.</summary>
-        protected bool Swinging => swingT >= 0f;
+        protected bool Swinging => Swing.Swinging;
 
         /// <summary>The light at the business end, for subclasses that have to report where it is.</summary>
         protected Light TipLight => tipLight;
@@ -101,7 +115,14 @@ namespace SpaceGame.Items
         /// from it instead of timing a second one that would drift out of step with the first.
         /// </para>
         /// </summary>
-        protected float Flare { get; private set; }
+        protected float Flare => Swing.Flare;
+
+        /// <summary>
+        /// The swing's own clock, made on first use rather than in a field initialiser so the
+        /// serialized duration and curve are the ones the Inspector shows.
+        /// </summary>
+        private SpaceGame.Characters.SwingFlare Swing =>
+            swing ??= new SpaceGame.Characters.SwingFlare(swingDuration, swingCurve);
 
         /// <summary>Where the damage sweep is centred and how far it reaches.</summary>
         protected abstract void GetSweep(out Vector3 centre, out float radius);
@@ -122,6 +143,17 @@ namespace SpaceGame.Items
 
         /// <summary>The hit. One sweep per press, at the moment of the press.</summary>
         protected override void Use() => SweepForHits();
+
+        /// <summary>
+        /// No swing, no sweep.
+        /// <para>
+        /// The body refuses a swing that is still inside the cooldown or that there is no light
+        /// left to pay for, and the sweep has to refuse with it: a weapon that hurt things anyway
+        /// would be a blow with no swing behind it, and — since the light is spent inside the
+        /// swing — the one attack in the game that cost nothing.
+        /// </para>
+        /// </summary>
+        protected override bool CanUse() => base.CanUse() && bodySwung;
 
         /// <summary>
         /// Hurt everything inside the sweep <see cref="GetSweep"/> reports right now.
@@ -147,7 +179,7 @@ namespace SpaceGame.Items
                 if (owner != null && hit.transform.IsChildOf(owner.transform)) continue;
 
                 // A target is whatever owns the health, and a creature is many colliders. Keyed on
-                // the collider instead, a limb and then a torso would be two hits on one goblin.
+                // the collider instead, a limb and then a torso would be two hits on one creature.
                 Component victim = hit.GetComponentInParent<HealthComponent>();
                 if (alreadyHit != null && !alreadyHit.Add(victim != null ? victim : hit)) continue;
 
@@ -155,16 +187,21 @@ namespace SpaceGame.Items
             }
         }
 
-        /// <summary>The look. Runs on every machine, so the swing is never waiting on anything.</summary>
+        /// <summary>The look, and the swing the look belongs to.</summary>
         protected override void Present()
         {
-            swingT = 0f;
-
             // The holder swings its own body. Going through PlayerMeleeSwing rather than writing
-            // to the Animator here means the weapon shares the bare hand's cooldown and its
-            // variation counter, so swapping between them never repeats a clip for no visible
-            // reason. It plays the animation only — the damage is this weapon's own sweep.
-            if (holderSwing != null) holderSwing.TryPlaySwing();
+            // to the Animator here means the weapon shares the bare hand's cooldown, its variation
+            // counter and its cost in light — so swapping between them never repeats a clip for no
+            // visible reason, and never makes an attack cheaper. A weapon in no player's hand has
+            // no body to ask and swings freely, which is what lets a creature carry one.
+            bodySwung = holderSwing == null || holderSwing.TryPlaySwing();
+
+            // Nothing happened, so nothing is shown. Flaring a weapon whose swing was refused
+            // would read as a hit that the sweep is about to decline to make.
+            if (!bodySwung) return;
+
+            Swing.Begin();
 
             if (trail != null)
             {
@@ -177,17 +214,8 @@ namespace SpaceGame.Items
 
         private void LateUpdate()
         {
-            if (swingT >= 0f)
-            {
-                swingT += Time.deltaTime;
-                if (swingT >= swingDuration)
-                {
-                    swingT = -1f;
-                    if (trail != null) trail.emitting = false;
-                }
-            }
+            if (Swing.Tick(Time.deltaTime) && trail != null) trail.emitting = false;
 
-            Flare = swingT < 0f ? 0f : swingCurve.Evaluate(SwingProgress);
             ApplyLight(Flare);
             ApplyTrail(Flare);
             OnFlareChanged(Flare);

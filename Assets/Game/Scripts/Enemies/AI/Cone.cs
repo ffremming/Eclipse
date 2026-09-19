@@ -20,7 +20,7 @@ namespace SpaceGame.Enemies
         ///
         /// <para>
         /// Measured flat: the Y axis is dropped from both the offset and the facing before the
-        /// angle is taken. A goblin standing on a crate is still in front of you, and without this
+        /// angle is taken. A creature standing on a crate is still in front of you, and without this
         /// a target directly below or above would fall out of the cone on height alone.
         /// </para>
         /// </summary>
