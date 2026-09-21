@@ -125,3 +125,19 @@ fmod_editor.log
 # Brainstorming mockups — scratch, kept on disk only so they survive a server restart
 .superpowers/
 .agent-staging/
+
+# Raw asset downloads dropped at the repo root. Unity only imports what is under
+# Assets/, so an archive or model landing here is an un-unpacked download, never a
+# project file. A 433 MB Goblin_FBX.rar committed here made the repo unpushable --
+# GitHub hard-rejects any file over 100 MB -- and cost a history rewrite to undo.
+# Root-anchored so real .fbx/.blend assets under Assets/ are unaffected.
+/*.rar
+/*.zip
+/*.7z
+/*.gz
+/*.glb
+/*.gltf
+/*.fbx
+/*.blend
+/*.obj
+/*.log

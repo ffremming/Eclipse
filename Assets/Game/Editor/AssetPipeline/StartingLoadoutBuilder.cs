@@ -28,19 +28,25 @@ namespace SpaceGame.EditorTools
         private const string ItemFolder = "Assets/Game/Resources/Items/Artifacts";
 
         /// <summary>
-        /// Hotbar order, slot 1 upwards. The five weapons take the keys the player will actually
-        /// reach for mid-fight; the torch and the lantern sit past them because each is switched on
-        /// once and then left alone, not swapped to under pressure.
+        /// Hotbar order, slot 1 upwards. Three weapons, one per way of reaching a thing: the chain
+        /// at range and around cover, the boomerang thrown and come back, the torch in the fist.
+        /// <para>
+        /// The blades — sword, khopesh and axe — are off the bar rather than deleted. Three weapons
+        /// that differ only in reach and damage are one weapon with three models, and a player who
+        /// has to choose between three number keys is choosing nothing. Their assets and builders
+        /// are left where they are, so putting one back is a line here.
+        /// </para>
+        /// <para>
+        /// The lantern is off it for a different reason: <c>EyeLights</c> makes the light the
+        /// player's own, carried in front of the eyes whatever is in the hand, so a hand-held lamp
+        /// with a switch has nothing left to do that the eyes do not do better.
+        /// </para>
         /// </summary>
         private static readonly string[] Loadout =
         {
-            "LightSword",
-            "LightKhopesh",
-            "LightAxe",
             "LightChain",
             "LightBoomerang",
             "Torch",
-            "Lantern",
         };
 
         /// <summary>

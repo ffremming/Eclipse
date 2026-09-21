@@ -5,9 +5,13 @@ asset: no rig, no UVs, no materials.
 
 ## Source
 
-`human_sculpt_base_source.obj` is `FinalBaseMesh.obj` from `fdx54mtvuz28-FinalBaseMesh.rar` (dated
-2014-08-21). The original archive is still in `Assets/Game/Art/`. No licence text came with it — check
-where it was downloaded from before shipping anything derived from it.
+The sculpt was imported from a downloaded base mesh, `FinalBaseMesh.obj` (dated 2014-08-21). No
+licence text came with it, so on 2026-09-20 both the imported `human_sculpt_base_source.obj` and the
+archive it came out of were **removed from the repository** and kept outside it, in
+`../Eclipse-asset-downloads/`. Settle the licence before shipping anything derived from the sculpt.
+
+`human_sculpt_base.blend` is the source of truth now; `human_sculpt_base.py` was the one-time import
+and cannot re-run without the OBJ, which is deliberate.
 
 The OBJ: 24,461 verts, 24,459 quads, no triangles or n-gons, closed, symmetric in X, no UVs, no `.mtl`.
 

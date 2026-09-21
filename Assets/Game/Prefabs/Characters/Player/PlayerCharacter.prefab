@@ -203,6 +203,11 @@ GameObject:
   - component: {fileID: 4667496392460210910}
   - component: {fileID: 2314435313842449330}
   - component: {fileID: 3915772064880221570}
+  - component: {fileID: 4811220000000000101}
+  - component: {fileID: 4811220000000000102}
+  - component: {fileID: 4811220000000000103}
+  - component: {fileID: 4811220000000000110}
+  - component: {fileID: 6768036833461231877}
   m_Layer: 0
   m_Name: PlayerCharacter
   m_TagString: Player
@@ -323,15 +328,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75ed90fe11e642b39b59391638e18632, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInventoryComponent
-  inventorySize: 10
+  inventorySize: 6
   startingItems:
-  - {fileID: 11400000, guid: b6ea6cc8829714376aeb30c29d223482, type: 2}
-  - {fileID: 11400000, guid: 7a926ccb0de944de3ae482121f013a30, type: 2}
-  - {fileID: 11400000, guid: 123f46f3f3ab44aa3beef96250bfbe13, type: 2}
   - {fileID: 11400000, guid: 0bec3962cad8c419b858e28181f6e8a8, type: 2}
   - {fileID: 11400000, guid: 812a5501f14ed4b0da7ee4f5ad3b8ae0, type: 2}
   - {fileID: 11400000, guid: 7f057a590d9704accbdc3ad885d8b438, type: 2}
-  - {fileID: 11400000, guid: 3ba127879ab2d46e8b65639093a568d5, type: 2}
 --- !u!114 &1264622234854504379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -764,6 +765,145 @@ MonoBehaviour:
     drift: 26
     referenceResolution: {x: 1920, y: 1080}
     sortingOrder: 150
+--- !u!114 &4811220000000000101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4516265153368369930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66985353320c04d5fa40d6500f11da08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Gameplay.RunExits
+  menuScene: {fileID: 11400000, guid: 0468f0ff2d33fd9498e1b3150e4609d6, type: 2}
+--- !u!114 &4811220000000000102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4516265153368369930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fc5ace561c894fc8927a769da7da2ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Presentation.DeathScreen
+  saying: YOUR LIGHT IS OUT
+  riseLabel: Rise
+  againLabel: Again
+  leaveLabel: Leave
+  style:
+    veil: {r: 0.02, g: 0.02, b: 0.03, a: 0.78}
+    fadeSeconds: 0.55
+    titleFontSize: 76
+    titleHeight: 180
+    titleInk: {r: 1, g: 0.93, b: 0.78, a: 1}
+    choiceFontSize: 38
+    choiceSize: {x: 360, y: 74}
+    choiceSpacing: 18
+    choiceTop: -20
+    choiceFill: {r: 1, g: 0.93, b: 0.78, a: 0.08}
+    choiceHoverFill: {r: 1, g: 0.93, b: 0.78, a: 0.22}
+    choiceInk: {r: 1, g: 0.95, b: 0.86, a: 0.92}
+    dialHeight: 70
+    dialSize: {x: 360, y: 12}
+    dialFontSize: 26
+    dialCaptionGap: 30
+    dialTrack: {r: 1, g: 0.93, b: 0.78, a: 0.12}
+    dialFill: {r: 1, g: 0.93, b: 0.78, a: 0.45}
+    dialHandle: {r: 1, g: 0.95, b: 0.86, a: 0.92}
+    dialHandleWidth: 22
+    shadow: {r: 0, g: 0, b: 0, a: 0.75}
+    shadowOffset: 3
+    referenceResolution: {x: 1920, y: 1080}
+    sortingOrder: 400
+--- !u!114 &4811220000000000103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4516265153368369930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d825dd2acd9db4e17a3e5a8e46c8fad5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Presentation.PauseMenu
+  saying: PAUSED
+  resumeLabel: Resume
+  restartLabel: Start Again
+  leaveLabel: Leave
+  dialCaption: Mouse Speed
+  style:
+    veil: {r: 0.02, g: 0.02, b: 0.03, a: 0.78}
+    fadeSeconds: 0.55
+    titleFontSize: 76
+    titleHeight: 180
+    titleInk: {r: 1, g: 0.93, b: 0.78, a: 1}
+    choiceFontSize: 38
+    choiceSize: {x: 360, y: 74}
+    choiceSpacing: 18
+    choiceTop: -20
+    choiceFill: {r: 1, g: 0.93, b: 0.78, a: 0.08}
+    choiceHoverFill: {r: 1, g: 0.93, b: 0.78, a: 0.22}
+    choiceInk: {r: 1, g: 0.95, b: 0.86, a: 0.92}
+    dialHeight: 70
+    dialSize: {x: 360, y: 12}
+    dialFontSize: 26
+    dialCaptionGap: 30
+    dialTrack: {r: 1, g: 0.93, b: 0.78, a: 0.12}
+    dialFill: {r: 1, g: 0.93, b: 0.78, a: 0.45}
+    dialHandle: {r: 1, g: 0.95, b: 0.86, a: 0.92}
+    dialHandleWidth: 22
+    shadow: {r: 0, g: 0, b: 0, a: 0.75}
+    shadowOffset: 3
+    referenceResolution: {x: 1920, y: 1080}
+    sortingOrder: 400
+--- !u!114 &4811220000000000110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4516265153368369930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83882a6d68c440da875ba709a27a5ce9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Characters.EyeLights
+  animator: {fileID: 0}
+  health: {fileID: -6402392480385526436}
+  eyeHeight: 0.09
+  eyeForward: 0.12
+  eyeSpacing: 0.13
+  fallbackEyeHeight: 1.6
+  lampColor: {r: 0.86, g: 0.9, b: 1, a: 1}
+  lampRange: 14
+  lampIntensity: 30
+  castShadows: 1
+  gazeColor: {r: 0.78, g: 0.82, b: 0.95, a: 1}
+  gazeRange: 170
+  gazeAngle: 74
+  gazeInnerAngle: 26
+  gazeIntensity: 260
+  gazeTurnSpeed: 520
+  dimFloor: 0.4
+  dimSpeed: 4
+--- !u!114 &6768036833461231877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4516265153368369930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73679846a3e574bb4a20275cae680ed5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Gameplay.PlayerRespawn
+  lightOnReturn: 0.34
 --- !u!1 &7420260919000000104
 GameObject:
   m_ObjectHideFlags: 0

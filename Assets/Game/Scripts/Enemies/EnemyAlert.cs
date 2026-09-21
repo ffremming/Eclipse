@@ -29,25 +29,49 @@ namespace SpaceGame.Enemies
         /// </summary>
         public static void Shout(EnemyAgent source, Vector3 position, float radius)
         {
+            Prune();
             float sqrRadius = radius * radius;
 
-            for (int i = Listeners.Count - 1; i >= 0; i--)
+            foreach (EnemyAgent listener in Listeners)
             {
-                EnemyAgent listener = Listeners[i];
-
-                // Destroyed without unregistering — a body removed by something other than its own
-                // OnDisable. Dropped here rather than left to accumulate as null entries.
-                if (listener == null)
-                {
-                    Listeners.RemoveAt(i);
-                    continue;
-                }
-
                 if (listener == source) continue;
                 if ((listener.transform.position - position).sqrMagnitude > sqrRadius) continue;
 
                 listener.HearAlert();
             }
+        }
+
+        /// <summary>
+        /// Whether anything within <paramref name="radius"/> of <paramref name="position"/> is
+        /// currently closing on something or swinging at it — which is this game's definition of
+        /// "a fight is happening here".
+        /// <para>
+        /// Asked of the same roster the shout walks, rather than of the physics scene, and for the
+        /// same reason: the answer is always about enemies, and there are only ever a dozen of them.
+        /// </para>
+        /// </summary>
+        public static bool AnyHunting(Vector3 position, float radius)
+        {
+            Prune();
+            float sqrRadius = radius * radius;
+
+            foreach (EnemyAgent listener in Listeners)
+            {
+                if (!listener.IsHunting) continue;
+                if ((listener.transform.position - position).sqrMagnitude > sqrRadius) continue;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        // Destroyed without unregistering — a body removed by something other than its own
+        // OnDisable. Dropped here rather than left to accumulate as null entries.
+        private static void Prune()
+        {
+            for (int i = Listeners.Count - 1; i >= 0; i--)
+                if (Listeners[i] == null) Listeners.RemoveAt(i);
         }
 
         // Statics outlive a play session when Enter Play Mode Options are on, and a list still

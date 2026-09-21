@@ -160,6 +160,14 @@ namespace SpaceGame.Enemies
         /// <summary>Told by a neighbour that there is something to fight. Consumed on the next tick.</summary>
         public void HearAlert() => heardAlert = true;
 
+        /// <summary>
+        /// True while it is closing on a target or standing in front of one swinging — as opposed
+        /// to merely being angry, which outlasts both by the length of its aggro memory. What
+        /// <see cref="EnemyAlert.AnyHunting"/> counts, and so what the score calls a fight.
+        /// </summary>
+        public bool IsHunting =>
+            brain != null && (brain.State == EnemyState.Chase || brain.State == EnemyState.Attack);
+
         private void Update()
         {
             // Off the mesh as well as merely disabled: a body the ragdoll has left somewhere

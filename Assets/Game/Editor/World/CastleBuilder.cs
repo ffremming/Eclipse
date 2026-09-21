@@ -4,11 +4,13 @@ using SpaceGame.Castle;
 using SpaceGame.Enemies;
 using SpaceGame.Gameplay;
 using SpaceGame.Items;
+using SpaceGame.Presentation;
 using SpaceGame.Vegetation;
 using Unity.AI.Navigation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace SpaceGame.EditorTools
 {
@@ -221,6 +223,8 @@ namespace SpaceGame.EditorTools
                               KeyedEntrance.Answer.Swing, destination: null);
 
             BuildGarrison(root.transform, stand, terrain, seed, towerKey);
+
+            FitMusicZone(root, stand);
 
             var encounter = root.AddComponent<CastleEncounter>();
             ItemBuilderKit.Wire(encounter, "beacon", beacon);
@@ -558,6 +562,67 @@ namespace SpaceGame.EditorTools
             var created = ScriptableObject.CreateInstance<DaylightProfile>();
             AssetDatabase.CreateAsset(created, DaylightPath);
             return created;
+        }
+
+        /// <summary>
+        /// Gives a castle the reach over which it owns the music.
+        /// <para>
+        /// The shelf plus half the hillside, so the score comes up while the player is still
+        /// climbing towards the place rather than as they step over a line at the top of it.
+        /// </para>
+        /// </summary>
+        private static void FitMusicZone(GameObject root, CastleStand stand)
+        {
+            MusicZone zone = root.GetComponent<MusicZone>();
+            if (zone == null) zone = root.AddComponent<MusicZone>();
+
+            ItemBuilderKit.WireEnum(zone, "mood", (int)MusicMood.Castle);
+            ItemBuilderKit.WireFloat(zone, "radius", stand.PlateauRadius + stand.SkirtWidth * 0.5f);
+            ItemBuilderKit.WireBool(zone, "holdsThroughFights", true);
+        }
+
+        /// <summary>
+        /// Fits the music zones onto castles that are already standing, for a world that was built
+        /// before the score existed. Everything else about the castles is left alone — this is the
+        /// one piece a scene can be missing without being worth a full rebuild.
+        /// </summary>
+        [MenuItem("Tools/Eclipse/World/Place Castle Music Zones")]
+        private static void PlaceMusicZones()
+        {
+            int fitted = 0;
+            foreach (CastleEncounter encounter in Object.FindObjectsByType<CastleEncounter>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                CastleStand? stand = StandNamed(encounter.gameObject.name);
+                if (stand == null)
+                {
+                    Debug.LogWarning($"[Castle] {encounter.name} is not one of the castles " +
+                                     "CastlePlacement knows about, so there is no radius to give " +
+                                     "its music zone.", encounter);
+                    continue;
+                }
+
+                FitMusicZone(encounter.gameObject, stand.Value);
+                fitted++;
+            }
+
+            if (fitted == 0)
+            {
+                Debug.LogWarning("[Castle] No castles in the open scene to give music to.");
+                return;
+            }
+
+            EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+            Debug.Log($"[Castle] Fitted {fitted} music zone(s).");
+        }
+
+        /// <summary>The stand a castle in the scene was built from, matched by the name it was given.</summary>
+        private static CastleStand? StandNamed(string name)
+        {
+            foreach (CastleStand stand in CastlePlacement.All)
+                if (stand.Name == name) return stand;
+
+            return null;
         }
 
         /// <summary>Drops a previous copy of this castle, so building twice does not stack them.</summary>

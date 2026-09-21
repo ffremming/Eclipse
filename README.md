@@ -66,6 +66,18 @@ system, enemy camps and a ruined castle, all under a permanently eclipsed sky.
 Holding `Q` slows the game and hands the look input to a pointer that steers round the dial instead
 of the camera; letting go equips the hotbar slot it was over.
 
+## Credits
+
+The dragon on the main menu is **"Mountain Dragon"** by Alexey Zaika and the torch is
+**"Torch"** by milacetious, both from Sketchfab under
+[CC BY 4.0](http://creativecommons.org/licenses/by/4.0/) and both modified. Animation comes from
+Adobe Mixamo and Kevin Iglesias' *Human Animations*, the vegetation wind from Nicrom's *Low Poly
+Wind*, and the camera shake from First Gear Games' *Smooth Camera Shaker*.
+
+Every asset here that was not made for this project, with what each licence asks of us — and the
+handful whose origin still has to be traced before anything ships — is in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ## Notes
 
 - The screenshots above are Scene-view captures from the editor, not a built player.

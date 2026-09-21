@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2f87ae993a814d9ba88b3c11a433ae3, type: 3}
+  m_Name: MusicLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceGame.Presentation.MusicLibrary
+  shelves:
+  - mood: 0
+    clips:
+    - {fileID: 8300000, guid: 44a570929621549f39ef6d6fca75f04f, type: 3}
+    gain: 1
+    fadeSeconds: 5
+    restSeconds: 0
+    playsOnce: 0
+  - mood: 1
+    clips:
+    - {fileID: 8300000, guid: ceec502cee1464324b203114a4c115a4, type: 3}
+    - {fileID: 8300000, guid: e5de20983806c4d22aa51e9ec2aeeabb, type: 3}
+    - {fileID: 8300000, guid: 0793e590239134472ab4b9320cb023d5, type: 3}
+    - {fileID: 8300000, guid: 74848aba883c645ce9edfa485b1095d9, type: 3}
+    - {fileID: 8300000, guid: 15186e40830ff4dbb806af701a84cb61, type: 3}
+    - {fileID: 8300000, guid: 57c05f4d6a3b247bebf57f84741ca5a3, type: 3}
+    gain: 1
+    fadeSeconds: 4
+    restSeconds: 20
+    playsOnce: 0
+  - mood: 2
+    clips:
+    - {fileID: 8300000, guid: 89028fc020e8d4b88bf0cccfc695bd19, type: 3}
+    - {fileID: 8300000, guid: afbc3289d8652456aa01fc3866c3424a, type: 3}
+    - {fileID: 8300000, guid: 0de193430cffa4a968e4ce4021cf886a, type: 3}
+    - {fileID: 8300000, guid: bfbaaae114e96415480ece50fee5a3b8, type: 3}
+    gain: 1
+    fadeSeconds: 1.6
+    restSeconds: 0
+    playsOnce: 0
+  - mood: 3
+    clips:
+    - {fileID: 8300000, guid: cb13c540400534329a8bcdcfecfb92e1, type: 3}
+    - {fileID: 8300000, guid: df5dbf55fe5e6410cbcb90d21f5a7257, type: 3}
+    - {fileID: 8300000, guid: e1746e223071b4707b89cd7a323da341, type: 3}
+    gain: 1
+    fadeSeconds: 6
+    restSeconds: 8
+    playsOnce: 0
+  - mood: 4
+    clips:
+    - {fileID: 8300000, guid: 6868ae705b390423097e221414aefe08, type: 3}
+    gain: 1
+    fadeSeconds: 1
+    restSeconds: 0
+    playsOnce: 1

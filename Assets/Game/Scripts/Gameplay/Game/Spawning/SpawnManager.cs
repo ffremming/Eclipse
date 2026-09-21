@@ -114,7 +114,7 @@ namespace SpaceGame.Gameplay
         /// A validated position to put a fighter back on their feet at.
         ///
         /// Respawning deliberately does not replace the body: it is a state change on a living
-        /// object, not a new object — see <c>PlayerRespawn</c>. This only answers where.
+        /// object, not a new object — see <see cref="PlayerRespawn"/>. This only answers where.
         /// </summary>
         public bool TryGetRespawnPosition(out Vector3 respawnPosition) =>
             TryGetSpawnPoint(out respawnPosition);

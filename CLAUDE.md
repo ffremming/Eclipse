@@ -37,6 +37,8 @@ is a mechanical change nobody has made yet.
 | Spawning | `Scripts/Gameplay/Game/Spawning/` | `SpawnManager`, `SpawnPoint`, `SpawnClearance` |
 | Teleporting | `Scripts/Core/Motion/Teleport.cs`, `Scripts/Core/Teleporting/` | `Teleport.Move`, `ITeleportAware` |
 | Menu | `Scripts/Presentation/UI/` | `MainMenuUI`, `CursorSpotlight`, `RevealField` |
+| Death / pause | `Scripts/Presentation/UI/Stop/`, `Scripts/Gameplay/Game/State/` | `DeathScreen`, `PauseMenu`, `StopScreenView`, `RunExits` |
+| Respawn | `Scripts/Gameplay/Game/Spawning/`, `Scripts/Gameplay/Light/` | `PlayerRespawn`, `Rekindle`, `SpawnManager.TryGetRespawnPosition` |
 | Weapon wheel | `Scripts/Items/Inventory/Wheel/`, `Scripts/Presentation/UI/WeaponWheel/` | `WeaponWheel`, `RadialSelection`, `WeaponWheelView` |
 | Glow mushrooms | `Scripts/Gameplay/Light/`, `Editor/AssetPipeline/GlowMushroomBuilder.cs` | `OrbBurstOnDeath`, `OrbBurst` — see [docs/architecture/GlowMushroom.md](docs/architecture/GlowMushroom.md) |
 
@@ -56,13 +58,42 @@ scene.
 a sound, and the volume settings in `GameSettings` now feed nothing. Re-adding audio means choosing
 a backend first, not restoring call sites.
 
-**UI is the main menu, the weapon wheel and the lantern, and nothing else.** There is no other HUD: no
-crosshair, no death screen, no interaction prompt, no damage numbers, no pause menu. The lantern is
+**UI is the main menu, the weapon wheel, the lantern, the key banner and the two stop screens.**
+There is no other HUD: no crosshair, no interaction prompt, no damage numbers. The lantern is
 the player's health bar, drawn bottom right — see "Light" below. The wheel is
 held on Q: the game slows, the look input steers a pointer round the dial instead of the camera, and
 letting go equips the hotbar slot under it. It is built from code at runtime by `WeaponWheel`, which
 sits on the player prefab, so there is no UI prefab or scene to keep in step with it. Q used to be
 the flight-era Deploy action; nothing consumed it.
+
+**The game stops two ways, and both are the same screen.** `StopScreenView` is a veil, a line and a
+column of words, told what to say and what to offer and deciding nothing itself; `DeathScreen` and
+`PauseMenu` are what tell it. Both sit on the player prefab and build themselves from code, like
+everything else here. The difference between them is time: pausing sets `Time.timeScale` to zero,
+dying deliberately does not — the death animation is playing underneath, and the world going on
+without the light in it is the truer picture. Both fade on unscaled time for that reason. Escape is
+the pause screen's own `InputAction` rather than one of `PlayerInputManager`'s, because pausing
+switches that component off and an Escape living there could open the screen but never close it.
+The mouse-speed dial lives on the pause screen because it is the only moment the game gives a
+player to change anything. Both screens' exits are one component, `RunExits`: Restart reloads the
+world (Eclipse is one run against one world, so starting again is a scene load, not a revive),
+Leave saves settings and goes back to the menu, and both put `Time.timeScale` back first, since a
+zero carried across a scene load is a game that comes up already stopped. The world scene has no
+EventSystem of its own — nothing in it was ever clicked — so `StopScreenView` brings one.
+
+**Dying is not the end of the run.** The death screen's first word is Rise, and `PlayerRespawn`
+stands the same body back up: `SpawnManager.TryGetRespawnPosition` answers where (the world's one
+spawn point, falling back to checked ground where the body fell), `Teleport.Move` puts it there,
+and `HealthComponent.RestoreHealth` lights the lantern again — which raises `OnRevive`, which is
+what hands control back and takes the screen down. Nothing is rewound: camps that were cleared stay
+cleared, doors stay open, the orbs on the floor stay on the floor, and `PlayerKeyRing` keeps its
+keys because the body was never replaced. **The whole price of dying is the lantern**, and it is one
+number — `Rekindle.OnReturn(max, share)`, with `PlayerRespawn.lightOnReturn` at 0.34, so a death
+costs about two thirds of full light and the walk back. A share of the maximum rather than a fixed
+count, so resizing the lantern cannot silently retune what death costs; never zero, because a
+respawn handing back a dead body would raise the death screen from inside the standing up meant to
+close it. Restart still exists beside it and still reloads the world — that is the other thing
+entirely.
 
 **Light is the player's health.** The player's `HealthComponent` holds 30 points, one per orb of
 light, and its `lightCost` field makes a blow take the orbs it is worth instead of its damage:
@@ -97,7 +128,7 @@ sculpt in `Art/Models/_Source~/models/characters/human_sculpt_base/`. It runs on
 library, `Art/Animations/Creature/Creature.controller`, retargeted through the Humanoid avatar. So
 do the two other creatures cut from the same sculpt — the **Alien** and the **Crumpy** — which are
 rigged with the same skeleton and exported by the same `sculpt_character_export.py`. The EditMode
-suite is green (178 tests).
+suite is green (190 tests).
 
 ### The alien and the crumpy
 
@@ -170,6 +201,10 @@ ticks.
 | --- | --- |
 | [spacegame-agent](.claude/skills/spacegame-agent/SKILL.md) | **Stale** — describes the deleted module/faction stack, not `Scripts/Enemies/`. See [docs/architecture/EnemySystem.md](docs/architecture/EnemySystem.md) |
 | [blender-model](.claude/skills/blender-model/SKILL.md) | Any 3D asset — models, props, variants — in the `.blend` library |
+
+Assets that were not made here are recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md),
+which is also where the CC-BY attributions the build owes live — add to it whenever an outside
+asset comes in.
 
 Architecture notes live in [docs/architecture/](docs/architecture/). Both those and the skills were
 inherited, so an example that names a feature this project no longer has (net gun, portals, mounts,
